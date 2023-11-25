@@ -3,21 +3,21 @@ ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
 -- alter session set container = Hotel_DB;
 grant all privileges to admin;
 -------------------------ROLE-------------------------
-
-CREATE TABLE ROLES (
-    role_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
-    role_name NVARCHAR2(50) NOT NULL,
-    CONSTRAINT role_pk PRIMARY KEY (role_id)
-);
-
-SELECT * FROM ROLES;
-
-INSERT INTO ROLES(role_name) VALUES('Administrator');
-INSERT INTO ROLES(role_name) VALUES('Staff');
-INSERT INTO ROLES(role_name) VALUES('Guest');
-COMMIT;
-
-DROP TABLE ROLES;
+-- роли не будет
+-- CREATE TABLE ROLES (
+--     role_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
+--     role_name NVARCHAR2(50) NOT NULL,
+--     CONSTRAINT role_pk PRIMARY KEY (role_id)
+-- );
+--
+-- SELECT * FROM ROLES;
+--
+-- INSERT INTO ROLES(role_name) VALUES('Administrator');
+-- INSERT INTO ROLES(role_name) VALUES('Staff');
+-- INSERT INTO ROLES(role_name) VALUES('Guest');
+-- COMMIT;
+--
+-- DROP TABLE ROLES;
 
 -------------------------ROOM_TYPE-------------------------
 
@@ -63,27 +63,28 @@ SELECT * FROM PHOTO;
 
 DROP TABLE PHOTO;
 
--------------------------PERSON-------------------------
+-------------------------GUESTS-------------------------
 
-CREATE TABLE PERSONS (
-    person_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
-    person_role_id NUMBER(10) DEFAULT 3 NOT NULL,
-    person_email NVARCHAR2(50) NOT NULL,
-    person_password NVARCHAR2(50) NOT NULL,
-    person_name NVARCHAR2(50) NOT NULL,
-    person_surname NVARCHAR2(50) NOT NULL,
-    person_father_name NVARCHAR2(50) NOT NULL,
-    CONSTRAINT person_pk PRIMARY KEY (person_id),
-    CONSTRAINT person_role_fk FOREIGN KEY (person_role_id) REFERENCES ROLES(role_id)
+CREATE TABLE GUESTS (
+    guest_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
+    guest_email NVARCHAR2(50) NOT NULL,
+    guest_name NVARCHAR2(50) NOT NULL,
+    guest_surname NVARCHAR2(50) NOT NULL,
+    CONSTRAINT guest_pk PRIMARY KEY (guest_id)
 );
 
-SELECT * FROM PERSONS;
+-------------------------EMPLOYEES-------------------------
 
-UPDATE PERSONS SET person_role_id = 1 WHERE person_id = 1;
-COMMIT;
-
-DROP TABLE PERSONS;
-
+CREATE TABLE EMPLOYEES (
+    employee_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
+    employee_name NVARCHAR2(50) NOT NULL,
+    employee_surname NVARCHAR2(50) NOT NULL,
+    employee_position NVARCHAR2(50) NOT NULL,
+    employee_email NVARCHAR2(50) NOT NULL,
+    employee_hire_date DATE NOT NULL,   --дата найма
+    employee_birth_date DATE NOT NULL,
+    CONSTRAINT employee_pk PRIMARY KEY (employee_id)
+);
 
 -------------------------ROOMS-------------------------
 
@@ -95,14 +96,8 @@ CREATE TABLE ROOMS (
     CONSTRAINT room_room_type_fk FOREIGN KEY (room_room_type_id) REFERENCES ROOM_TYPES(room_type_id)
 );
 
-SELECT * FROM ROOMS;
-
 INSERT INTO ROOMS(room_room_type_id, room_number) VALUES(1, '101');
 COMMIT;
-
-DROP TABLE ROOMS;
-
-
 
 -------------------------TARIFF_TYPES-------------------------
 
@@ -133,11 +128,13 @@ CREATE TABLE SERVICE_TYPES (
     service_type_name NVARCHAR2(50) NOT NULL,
     service_type_description NVARCHAR2(200) NOT NULL,
     service_type_daily_price FLOAT(10) NOT NULL,
-    CONSTRAINT service_type_pk PRIMARY KEY (service_type_id)
+    service_type_employee_id NUMBER(10) NOT NULL,
+    CONSTRAINT service_type_pk PRIMARY KEY (service_type_id),
+    CONSTRAINT service_type_employee_fk FOREIGN KEY (service_type_employee_id) REFERENCES EMPLOYEES(employee_id)
 );
 
 SELECT * FROM SERVICE_TYPES ;
-
+-- добавить работников
 INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Спа-услуги', 'Спа-центры предоставляют различные процедуры, массажи, сауны, джакузи, а также услуги парикмахера и маникюра', 50.0);
 INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Трансфер', 'Услуги трансфера из/в аэропорт или другие места', 40.50);
 INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Экскурсии', 'Организация поездок и экскурсий по местным достопримечательностям', 10.0);
@@ -158,12 +155,12 @@ DROP TABLE SERVICE_TYPES ;
 CREATE TABLE SERVICES (
     service_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
     service_type_id NUMBER(10) NOT NULL,
-    service_person_id NUMBER(10) NOT NULL,  --мб заменить на id брони или сделать табличку куда это запихнуть
+    service_guest_id NUMBER(10) NOT NULL,
     service_start_date DATE NOT NULL,
     service_end_date DATE NOT NULL,
     CONSTRAINT service_pk PRIMARY KEY (service_id),
     CONSTRAINT service_service_type_fk FOREIGN KEY (service_type_id) REFERENCES SERVICE_TYPES(service_type_id),
-    CONSTRAINT service_person_fk FOREIGN KEY (service_person_id) REFERENCES PERSONS(person_id)
+    CONSTRAINT service_guest_fk FOREIGN KEY (service_guest_id) REFERENCES GUESTS(guest_id)
 );
 
 SELECT * FROM SERVICES;
@@ -175,14 +172,14 @@ DROP TABLE SERVICES;
 CREATE TABLE BOOKING (
     booking_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
     booking_room_id NUMBER(10) NOT NULL,
-    booking_person_id NUMBER(10) NOT NULL,
+    booking_guest_id NUMBER(10) NOT NULL,
     booking_start_date DATE NOT NULL,
     booking_end_date DATE NOT NULL,
     booking_tariff_id NUMBER(10) NOT NULL,
     booking_state NUMBER(1) DEFAULT 0,
     CONSTRAINT booking_pk PRIMARY KEY (booking_id),
     CONSTRAINT booking_room_fk FOREIGN KEY (booking_room_id) REFERENCES ROOMS(room_id),
-    CONSTRAINT booking_person_fk FOREIGN KEY (booking_person_id) REFERENCES PERSONS(person_id),
+    CONSTRAINT booking_guest_fk FOREIGN KEY (booking_guest_id) REFERENCES GUESTS(guest_id),
     CONSTRAINT booking_tariff_fk FOREIGN KEY (booking_tariff_id) REFERENCES TARIFF_TYPES(tariff_type_id)
 );
 --booking_state:
@@ -195,15 +192,8 @@ DROP TABLE BOOKING;
 
 -------------------------NONAME-------------------------
 
--- CREATE TABLE QQQQ (
---     _id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
---     _person_id NUMBER(10) NOT NULL,
---     _booking_id NUMBER(10) NOT NULL,
---     CONSTRAINT _pk PRIMARY KEY (resident_id),
---     CONSTRAINT _person_fk FOREIGN KEY (_person_id) REFERENCES PERSONS(person_id),
---     CONSTRAINT _booking_fk FOREIGN KEY (_booking_id) REFERENCES BOOKING(booking_id)
--- );
---
--- SELECT * FROM QQQQ;
---
--- DROP TABLE QQQQ;
+drop table booking;
+drop table SERVICES;
+drop table PERSONS;
+drop table roles;
+
