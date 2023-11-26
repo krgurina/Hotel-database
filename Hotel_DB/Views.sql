@@ -1,4 +1,4 @@
---
+-- информация о комнате
 CREATE VIEW room_info_view AS
 SELECT
     R.room_id,
@@ -20,13 +20,13 @@ SELECT
     B.booking_start_date,
     B.booking_end_date,
     B.booking_state,
-    P.person_name,
-    P.person_surname,
+    G.guest_name,
+    G.guest_surname,
     R.room_number,
     RT.room_type_name,
     TT.tariff_type_name
 FROM BOOKING B
-JOIN PERSONS P ON B.booking_person_id = P.person_id
+JOIN GUESTS G ON B.booking_guest_id = G.guest_id
 JOIN ROOMS R ON B.booking_room_id = R.room_id
 JOIN ROOM_TYPES RT ON R.room_room_type_id = RT.room_type_id
 JOIN TARIFF_TYPES TT ON B.booking_tariff_id = TT.tariff_type_id;
@@ -58,37 +58,16 @@ JOIN
 
 -------------------------PERSON_VIEW-------------------------
 
-CREATE VIEW person_view
-AS SELECT persons.person_id, persons.person_email, persons.person_password, persons.PERSON_NAME, persons.PERSON_SURNAME, persons.person_father_name, --person_table fields
-roles.role_id, roles.role_name--role_table fields
-FROM PERSONS INNER JOIN ROLES ON persons.person_role_id = roles.role_id;
 
-SELECT * FROM person_view;
-
-DROP VIEW person_view;
 
 
 -------------------------STAFF_VIEW-------------------------
 
-CREATE VIEW staff_view
-AS SELECT P.person_id,  P.PERSON_NAME, P.PERSON_SURNAME, P.person_father_name,P.person_email--role_table fields
-FROM PERSONS P INNER JOIN ROLES R ON P.person_role_id = R.role_id
-where R.ROLE_ID=2;
 
-SELECT * FROM staff_view;
-
-DROP VIEW staff_view;
 
 -------------------------GUEST_VIEW-------------------------
 
-CREATE VIEW guest_view
-AS SELECT P.person_id,  P.PERSON_NAME, P.PERSON_SURNAME, P.person_father_name,P.person_email--role_table fields
-FROM PERSONS P INNER JOIN ROLES R ON P.person_role_id = R.role_id
-where R.ROLE_ID=3;
 
-SELECT * FROM guest_view;
-
-DROP VIEW guest_view;
 
 -------------------------SERVICE_INFO_VIEW-------------------------
 
@@ -107,12 +86,12 @@ CREATE VIEW service_view
 AS SELECT
     S.SERVICE_ID, S.SERVICE_START_DATE,s.SERVICE_END_DATE,
     ST.service_type_name, ST.service_type_daily_price, --service_type_table fields
-    P.PERSON_NAME, P.PERSON_SURNAME,
+    G.GUEST_NAME, G.GUEST_SURNAME,
     R.ROOM_NUMBER
 FROM SERVICE_TYPES ST
 INNER JOIN SERVICES S ON ST.service_type_id = S.SERVICE_ID
-LEFT OUTER JOIN PERSONS p ON S.service_person_id = p.person_id
-INNER JOIN BOOKING B ON p.PERSON_ID=B.BOOKING_PERSON_ID
+LEFT OUTER JOIN GUESTS G ON S.service_guest_id = G.guest_id
+INNER JOIN BOOKING B ON G.guest_id=B.BOOKING_GUEST_ID
 INNER JOIN ROOMS R ON B.BOOKING_ROOM_ID=R.ROOM_ID;
 
 SELECT * FROM service_view;
