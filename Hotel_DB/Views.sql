@@ -33,19 +33,46 @@ JOIN TARIFF_TYPES TT ON B.booking_tariff_id = TT.tariff_type_id;
 
 select * from booking_details_view;
 
---НЕПОНЯТНО не работает
-CREATE VIEW available_room_types_view AS
+--свободные комнаты
+CREATE VIEW AVAILABLE_ROOMS_VIEW AS
 SELECT
-    RT.room_type_id,
-    RT.room_type_name,
-    RT.room_type_capacity,
-    COUNT(B.booking_id) AS booked_rooms
-FROM ROOM_TYPES RT
-LEFT JOIN ROOMS R ON RT.room_type_id = R.room_room_type_id
-LEFT JOIN BOOKING B ON R.room_id = B.booking_room_id AND
-    NOT (B.booking_end_date <= :start_date OR B.booking_start_date >= :end_date)
-GROUP BY RT.room_type_id, RT.room_type_name, RT.room_type_capacity;
+    r.room_id,
+    r.room_number,
+    rt.room_type_name,
+    rt.room_type_capacity,
+    rt.room_type_daily_price,
+    rt.room_type_description
+FROM
+    ROOMS r
+    JOIN ROOM_TYPES rt ON r.room_room_type_id = rt.room_type_id
+WHERE
+    r.room_id NOT IN (
+        SELECT b.booking_room_id
+        FROM BOOKING b
+        WHERE (b.booking_start_date <= SYSDATE AND b.booking_end_date >= SYSDATE)
+           OR (b.booking_start_date > SYSDATE AND b.booking_start_date <= ADD_MONTHS(SYSDATE, 1))
+    );
 
+select * from AVAILABLE_ROOMS_VIEW;
+
+-- занятые сейчас комнаты
+CREATE VIEW OCCUPIED_ROOMS_VIEW AS
+SELECT
+    b.booking_id,
+    r.room_id,
+    r.room_number,
+    rt.room_type_name,
+    b.booking_start_date,
+    b.booking_end_date
+FROM
+    BOOKING b
+    JOIN ROOMS r ON b.booking_room_id = r.room_id
+    JOIN ROOM_TYPES rt ON r.room_room_type_id = rt.room_type_id
+WHERE
+    (b.booking_start_date <= SYSDATE AND b.booking_end_date >= SYSDATE)
+    OR (b.booking_start_date > SYSDATE AND b.booking_start_date <= ADD_MONTHS(SYSDATE, 1));
+
+select * from OCCUPIED_ROOMS_VIEW;
 
 --не создавать пока нет сервисов
 CREATE VIEW TotalRevenue AS
