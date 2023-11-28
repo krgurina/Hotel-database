@@ -185,7 +185,7 @@ CREATE TABLE BOOKING (
 --booking_state:
 --0 - забронирован онлайн
 --1 - бронь одобрена админом
-
+--2 отменено гостем
 SELECT * FROM BOOKING;
 
 DROP TABLE BOOKING;

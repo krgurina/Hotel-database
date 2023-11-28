@@ -97,3 +97,5 @@ INNER JOIN ROOMS R ON B.BOOKING_ROOM_ID=R.ROOM_ID;
 SELECT * FROM service_view;
 
 DROP VIEW service_view;
+
+
