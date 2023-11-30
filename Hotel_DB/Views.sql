@@ -14,7 +14,7 @@ LEFT JOIN PHOTO P ON R.room_room_type_id = P.photo_room_type_id;
 
 select * from room_info_view;
 --
-CREATE VIEW booking_details_view AS
+CREATE or replace VIEW booking_details_view AS
 SELECT
     B.booking_id,
     B.booking_start_date,
@@ -98,10 +98,19 @@ JOIN
 
 -------------------------SERVICE_INFO_VIEW-------------------------
 
-CREATE VIEW service_info_view
-AS SELECT ST.service_type_id, ST.service_type_name, ST.service_type_daily_price, st.SERVICE_TYPE_DESCRIPTION --service_type_table fields
-FROM SERVICE_TYPES ST
-order by ST.service_type_id;
+CREATE VIEW SERVICE_INFO_VIEW AS
+SELECT
+    S.service_id,
+    ST.service_type_name,
+    ST.service_type_description,
+    ST.service_type_daily_price,
+    E.employee_name,
+    E.employee_surname
+FROM
+    SERVICES S
+    JOIN SERVICE_TYPES ST ON S.service_type_id = ST.service_type_id
+    JOIN EMPLOYEES E ON ST.service_type_employee_id = E.employee_id;
+
 
 SELECT * FROM service_info_view;
 

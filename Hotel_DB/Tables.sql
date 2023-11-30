@@ -2,22 +2,7 @@ ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
 --alter pluggable database Hotel_DB open;
 -- alter session set container = Hotel_DB;
 grant all privileges to admin;
--------------------------ROLE-------------------------
--- роли не будет
--- CREATE TABLE ROLES (
---     role_id NUMBER(10) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
---     role_name NVARCHAR2(50) NOT NULL,
---     CONSTRAINT role_pk PRIMARY KEY (role_id)
--- );
---
--- SELECT * FROM ROLES;
---
--- INSERT INTO ROLES(role_name) VALUES('Administrator');
--- INSERT INTO ROLES(role_name) VALUES('Staff');
--- INSERT INTO ROLES(role_name) VALUES('Guest');
--- COMMIT;
---
--- DROP TABLE ROLES;
+
 
 -------------------------ROOM_TYPE-------------------------
 
@@ -135,17 +120,17 @@ CREATE TABLE SERVICE_TYPES (
 
 SELECT * FROM SERVICE_TYPES ;
 -- добавить работников
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Спа-услуги', 'Спа-центры предоставляют различные процедуры, массажи, сауны, джакузи, а также услуги парикмахера и маникюра', 50.0);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Трансфер', 'Услуги трансфера из/в аэропорт или другие места', 40.50);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Экскурсии', 'Организация поездок и экскурсий по местным достопримечательностям', 10.0);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Комната ожидания родителей', 'В комнате есть множество игрушек, с которыми Ваш ребенок может поиграть, специальный столик для рисования, горка и многое другое', 15.50);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Фитнес-центр', 'Оборудованный тренажерный зал с современными тренажерами и инструкторами', 20.0);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Бассейн','Крытый и открытый бассейн для отдыха и релаксации', 7.50);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Прачечная и Химчистка', 'Услуги стирки, глажения и химчистки одежды', 15.0);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Сейф', 'В лобби предоставляется услуга пользования сейфом, где Вы можете оставить ценные вещи', 18.0);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Услуга «звонок-будильник»', 'Для связи с сервисным центром наберите "0" и сообщите время, когда Вас необходимо разбудить', 5.0);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Аренда офисов', 'Гостиница предлагает площади для аренды под офисы', 15.0);
-INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price) VALUES('Доставка еды в номер ', 'Для гостей предоставляется круглосуточная услуга доставки еды в номер', 15.0);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Спа-услуги', 'Спа-центры предоставляют различные процедуры, массажи, сауны, джакузи, а также услуги парикмахера и маникюра', 50.0, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Трансфер', 'Услуги трансфера из/в аэропорт или другие места', 40.50, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Экскурсии', 'Организация поездок и экскурсий по местным достопримечательностям', 10.0, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Комната ожидания родителей', 'В комнате есть множество игрушек, с которыми Ваш ребенок может поиграть, специальный столик для рисования, горка и многое другое', 15.50, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Фитнес-центр', 'Оборудованный тренажерный зал с современными тренажерами и инструкторами', 20.0, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Бассейн','Крытый и открытый бассейн для отдыха и релаксации', 7.50, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Прачечная и Химчистка', 'Услуги стирки, глажения и химчистки одежды', 15.0, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Сейф', 'В лобби предоставляется услуга пользования сейфом, где Вы можете оставить ценные вещи', 18.0, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Услуга «звонок-будильник»', 'Для связи с сервисным центром наберите "0" и сообщите время, когда Вас необходимо разбудить', 5.0, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Аренда офисов', 'Гостиница предлагает площади для аренды под офисы', 15.0, 1);
+INSERT INTO SERVICE_TYPES (service_type_name, service_type_description, service_type_daily_price, service_type_employee_id) VALUES('Доставка еды в номер ', 'Для гостей предоставляется круглосуточная услуга доставки еды в номер', 15.0, 1);
 COMMIT;
 
 DROP TABLE SERVICE_TYPES ;

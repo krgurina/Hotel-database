@@ -31,6 +31,10 @@ PROCEDURE DenyBooking(
     p_service_end_date DATE);
 --6
     PROCEDURE DenyOrderedService(p_service_id NUMBER);
+--7 процедуры GET
+    PROCEDURE GetBookingDetailsBySurname(
+    p_guest_surname IN NVARCHAR2(50),
+    p_booking_details OUT booking_details_view%ROWTYPE);
 
 END UserPackageProc;
 /
@@ -314,6 +318,25 @@ EXCEPTION
         ROLLBACK;
 END DenyOrderedService;
 
+-- GET процедуры
+    PROCEDURE GetBookingDetailsBySurname(
+    p_guest_surname IN NVARCHAR2(50),
+    p_booking_details OUT booking_details_view%ROWTYPE
+)
+AS
+BEGIN
+    -- Извлекаем информацию о брони с использованием представления
+    SELECT *
+    INTO p_booking_details
+    FROM ADMIN.booking_details_view
+    WHERE guest_surname = p_guest_surname;
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID (' || p_guest_surname || ') не найдена.');
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Произошла ошибка: ' || SQLERRM);
+END GetBookingDetailsByID;
 
 END UserPackageProc;
 /
