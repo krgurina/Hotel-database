@@ -50,7 +50,7 @@ END;
 --пользователь
 
 BEGIN
-    ADMIN.UserPackageProc.PreBooking(
+    ADMIN.UserPack.PreBooking(
         p_room_id => 1,
         p_guest_id => 1,
         p_start_date => TO_DATE('2023-12-01', 'YYYY-MM-DD'),
@@ -61,4 +61,32 @@ END;
 /
 
 
+BEGIN
+    ADMIN.UserPack.BOOKINGNOW(
+        p_room_id => 1,
+        p_guest_id => 2,
+        p_end_date => TO_DATE('2023-12-10', 'YYYY-MM-DD'),
+        p_tariff_id => 2
+    );
+END;
+/
 
+DECLARE
+    v_room_id NUMBER := 3; -- замените на реальный ID номера
+    v_guest_id NUMBER := 3; -- замените на реальный ID гостя
+    v_end_date DATE := TO_DATE('2023-12-24', 'YYYY-MM-DD'); -- укажите желаемую дату окончания
+    v_tariff_id NUMBER := 4; -- замените на реальный ID тарифа
+    v_booking_id NUMBER;
+BEGIN
+    ADMIN.UserPack.BOOKINGNOW(
+        p_room_id => v_room_id,
+        p_guest_id => v_guest_id,
+        p_end_date => v_end_date,
+        p_tariff_id => v_tariff_id,
+        p_booking_id => v_booking_id
+    );
+    -- здесь вы можете использовать v_booking_id по вашему усмотрению
+END;
+/
+commit;
+select * from rooms;

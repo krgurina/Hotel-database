@@ -1,0 +1,8 @@
+CREATE OR REPLACE TRIGGER BookingStatusTrigger
+BEFORE INSERT ON BOOKING
+FOR EACH ROW
+BEGIN
+    :NEW.BOOKING_STATE := 1;
+    DBMS_OUTPUT.PUT_LINE('Бронь с ID: ' || :NEW.BOOKING_ID || ' Одобрена администратором');
+END;
+/

@@ -10,6 +10,7 @@ GRANT execute on ADMIN.HotelAdminPackageCRUD.INSERTEMPLOYEE to Hotel_admin_role 
 CREATE ROLE Guest_role;
 GRANT create session to Guest_role ;
 GRANT EXECUTE ON ADMIN.UserPackageProc TO Guest_role;
+GRANT EXECUTE ON ADMIN.UserPack TO Guest_role;
 
 ----------------------------------------------------------------
 create USER Hotel_admin identified by 123;

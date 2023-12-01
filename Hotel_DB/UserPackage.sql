@@ -44,7 +44,6 @@ CREATE OR REPLACE PACKAGE BODY UserPackageProc AS
 PROCEDURE BookingNow(
     p_room_id IN NUMBER,
     p_guest_id IN NUMBER,
-    p_start_date IN DATE,
     p_end_date IN DATE,
     p_tariff_id IN NUMBER
 )
@@ -52,6 +51,7 @@ AS
     v_room_exists NUMBER;
     v_room_available NUMBER;
     v_tariff_exists NUMBER;
+    v_start_date DATE;
 
 BEGIN
     -- существования номера
@@ -78,18 +78,23 @@ BEGIN
     IF v_room_available = 0 THEN
         RAISE_APPLICATION_ERROR(-20003,'Выбранный номер недоступен на указанные даты.');
     ELSE
+
+        v_start_date :=  SYSDATE;
+
         INSERT INTO BOOKING (
             booking_room_id,
             booking_guest_id,
             booking_start_date,
             booking_end_date,
-            booking_tariff_id
+            booking_tariff_id,
+            BOOKING_STATE
         ) VALUES (
             p_room_id,
             p_guest_id,
-            p_start_date,
+            v_start_date,
             p_end_date,
-            p_tariff_id
+            p_tariff_id,
+            1
         );
         DBMS_OUTPUT.PUT_LINE('Бронирование успешно добавлено.');
     END IF;
@@ -336,7 +341,7 @@ EXCEPTION
         RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID (' || p_guest_surname || ') не найдена.');
     WHEN OTHERS THEN
         RAISE_APPLICATION_ERROR(-20002, 'Произошла ошибка: ' || SQLERRM);
-END GetBookingDetailsByID;
+END GetBookingDetailsBySurname;
 
 END UserPackageProc;
 /
