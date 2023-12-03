@@ -3,6 +3,18 @@ ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
 -- alter session set container = Hotel_DB;
 grant all privileges to admin;
 
+----------------------------------------------------------------
+CREATE TABLESPACE HOTEL_TS
+DATAFILE 'hotel_ts.dbf' SIZE 200M
+AUTOEXTEND ON NEXT 20M MAXSIZE UNLIMITED
+EXTENT MANAGEMENT LOCAL UNIFORM SIZE 2M;
+
+
+CREATE TEMPORARY TABLESPACE HOTEL_TEMP_TS
+TEMPFILE 'hotel_temp_ts.dbf' SIZE 100M
+AUTOEXTEND ON NEXT 10M MAXSIZE UNLIMITED
+EXTENT MANAGEMENT LOCAL UNIFORM SIZE 1M;
+
 
 -------------------------ROOM_TYPE-------------------------
 
@@ -57,6 +69,9 @@ CREATE TABLE GUESTS (
     guest_surname NVARCHAR2(50) NOT NULL,
     CONSTRAINT guest_pk PRIMARY KEY (guest_id)
 );
+
+ALTER TABLE GUESTS
+ADD username NVARCHAR2(50) NOT NULL UNIQUE;
 
 -------------------------EMPLOYEES-------------------------
 

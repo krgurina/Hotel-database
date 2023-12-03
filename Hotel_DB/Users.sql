@@ -11,6 +11,8 @@ CREATE ROLE Guest_role;
 GRANT create session to Guest_role ;
 GRANT EXECUTE ON ADMIN.UserPackageProc TO Guest_role;
 GRANT EXECUTE ON ADMIN.UserPack TO Guest_role;
+GRANT SELECT ON booking_details_view TO Guest_role;
+
 
 ----------------------------------------------------------------
 create USER Hotel_admin identified by 123;

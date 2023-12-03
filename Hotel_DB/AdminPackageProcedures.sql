@@ -21,7 +21,8 @@ CREATE OR REPLACE PACKAGE HotelAdminPackageCRUD AS
     PROCEDURE InsertGuest(
         p_email NVARCHAR2,
         p_name NVARCHAR2,
-        p_surname NVARCHAR2);
+        p_surname NVARCHAR2,
+        p_username NVARCHAR2);
     PROCEDURE UpdateGuest(
         p_guest_id NUMBER,
         p_email NVARCHAR2,
@@ -119,7 +120,11 @@ PROCEDURE DeleteService(p_service_id NUMBER);
         p_booking_end_date DATE,
         p_booking_tariff_id NUMBER,
         p_booking_state NUMBER);
+
     PROCEDURE DeleteBooking(p_booking_id NUMBER);
+
+    PROCEDURE DeleteGuestCompletely(p_guest_id NUMBER);
+
 END HotelAdminPackageCRUD;
 /
 
@@ -260,23 +265,40 @@ END DeleteEmployee;
 PROCEDURE InsertGuest(
     p_email NVARCHAR2,
     p_name NVARCHAR2,
-    p_surname NVARCHAR2)
+    p_surname NVARCHAR2,
+    p_username NVARCHAR2
+)
 AS
+    v_username_exists NUMBER;
 BEGIN
+    SELECT COUNT(*) INTO v_username_exists FROM ALL_USERS
+    WHERE USERNAME = UPPER(p_username);
+
+    IF v_username_exists > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002,'Ошибка: Пользователь с таким именем ' || p_username || ' уже существует.');
+    END IF;
+
     IF REGEXP_LIKE(p_email, '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,4}$') = FALSE THEN
         RAISE_APPLICATION_ERROR(-20002, 'Неправильный формат email.');
     END IF;
 
-    INSERT INTO GUESTS (guest_email, guest_name, guest_surname)
-    VALUES (p_email, p_name, p_surname);
+    INSERT INTO GUESTS (guest_email, guest_name, guest_surname, USERNAME)
+    VALUES (p_email, p_name, p_surname,p_username);
     COMMIT;
-      DBMS_OUTPUT.PUT_LINE('Гость успешно создан.');
+
+    EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
+                      ' IDENTIFIED BY ' || p_username ||
+                      ' DEFAULT TABLESPACE HOTEL_TS' ||
+                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+
+     EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
+
+    DBMS_OUTPUT.PUT_LINE('Гость успешно создан. Ваш логин: '|| p_username || 'Пароль: '|| p_username);
 
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-        --RAISE; -- Повторное возбуждение исключения для передачи его вызывающему коду
 END InsertGuest;
 
 
@@ -323,7 +345,7 @@ END UpdateGuest;
 --удалить гостя
 PROCEDURE DeleteGuest(p_guest_id NUMBER)
 AS
-        v_guest_count NUMBER;
+    v_guest_count NUMBER;
 BEGIN
     SELECT COUNT(*) INTO v_guest_count
     FROM GUESTS
@@ -341,7 +363,6 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-        --RAISE; -- Повторное возбуждение исключения для передачи его вызывающему коду
 END DeleteGuest;
 
 
@@ -1124,6 +1145,37 @@ EXCEPTION
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
 END DeleteBooking;
+
+PROCEDURE DeleteGuestCompletely(p_guest_id NUMBER)
+AS
+    v_guest_count NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_guest_count FROM GUESTS
+    WHERE guest_id = p_guest_id;
+    IF v_guest_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+    END IF;
+
+    DELETE FROM SERVICES
+    WHERE service_guest_id = p_guest_id;
+
+    DELETE FROM BOOKING
+    WHERE booking_guest_id = p_guest_id;
+
+    DELETE FROM GUESTS
+    WHERE guest_id = p_guest_id;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+
+END DeleteGuestCompletely;
+
+
+
+
 
 END HotelAdminPackageCRUD;
 /
