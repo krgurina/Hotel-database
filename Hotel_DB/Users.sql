@@ -1,15 +1,23 @@
+select * from dba_users;
+
 CREATE ROLE Hotel_admin_role;
+
 GRANT create session to Hotel_admin_role ;
 GRANT create synonym to Hotel_admin_role ;
-GRANT execute on ADMIN.HotelAdminPackageCRUD to Hotel_admin_role ;
-GRANT execute on ADMIN.HotelAdminPackageCRUD.INSERTEMPLOYEE to Hotel_admin_role ;
+GRANT execute on ADMIN.HotelAdminPack to Hotel_admin_role ;
+--GRANT execute on ADMIN.HotelAdminPack.INSERTEMPLOYEE to Hotel_admin_role ;
 
 
+----------------------------------------------------------------
+CREATE ROLE Employee_role;
 
+GRANT create session to Employee_role ;
+GRANT EXECUTE ON ADMIN.EmployeePack TO Employee_role;
 
+----------------------------------------------------------------
 CREATE ROLE Guest_role;
+
 GRANT create session to Guest_role ;
-GRANT EXECUTE ON ADMIN.UserPackageProc TO Guest_role;
 GRANT EXECUTE ON ADMIN.UserPack TO Guest_role;
 GRANT SELECT ON booking_details_view TO Guest_role;
 

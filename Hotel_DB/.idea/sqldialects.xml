@@ -2,12 +2,14 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/AdminPackageProcedures.sql" dialect="Oracle" />
+    <file url="file://$PROJECT_DIR$/EmployeePack.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Functions.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/Import_Export.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/Import2.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Insert.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Synonyms.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Tables.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/Test.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/Tests/HotelAdminTest.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Tests/UsetTest.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Triggers.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/UserPack.sql" dialect="Oracle" />

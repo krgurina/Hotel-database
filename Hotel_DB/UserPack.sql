@@ -1,6 +1,6 @@
 CREATE OR REPLACE PACKAGE UserPack AS
     -- 1.
-    PROCEDURE BOOKINGNOW(
+    PROCEDURE BookingNow(
         p_room_id IN NUMBER,
         p_guest_id IN NUMBER,
         p_end_date IN DATE,
@@ -31,7 +31,7 @@ END UserPack;
 
 CREATE OR REPLACE PACKAGE BODY UserPack AS
 
-PROCEDURE BOOKINGNOW(
+PROCEDURE BookingNow(
     p_room_id IN NUMBER,
     p_guest_id IN NUMBER,
     p_end_date IN DATE,
@@ -78,7 +78,6 @@ BEGIN
     ELSE
         v_start_date :=  SYSDATE;
 
-        -- Используем RETURNING INTO для получения ID созданной брони
         INSERT INTO BOOKING (
             booking_room_id,
             booking_guest_id,
@@ -92,7 +91,7 @@ BEGIN
             v_start_date,
             p_end_date,
             p_tariff_id,
-            1
+            2
         ) RETURNING booking_id INTO p_booking_id;
         commit;
         DBMS_OUTPUT.PUT_LINE('Бронирование успешно добавлено.');
@@ -101,7 +100,7 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END BOOKINGNOW;
+END BookingNow;
 
 ----------------------------------------------------------------
 PROCEDURE PreBooking(

@@ -98,9 +98,10 @@ JOIN
 
 -------------------------SERVICE_INFO_VIEW-------------------------
 
-CREATE VIEW SERVICE_INFO_VIEW AS
+CREATE or replace VIEW SERVICE_TYPE_VIEW AS
 SELECT
     S.service_id,
+    ST.service_type_id,
     ST.service_type_name,
     ST.service_type_description,
     ST.service_type_daily_price,
@@ -112,9 +113,9 @@ FROM
     JOIN EMPLOYEES E ON ST.service_type_employee_id = E.employee_id;
 
 
-SELECT * FROM service_info_view;
+SELECT * FROM SERVICE_TYPE_VIEW;
 
-DROP VIEW service_info_view;
+DROP VIEW SERVICE_TYPE_VIEW;
 
 -------------------------SERVICE_VIEW-------------------------
 

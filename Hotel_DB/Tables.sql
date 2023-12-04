@@ -1,7 +1,4 @@
 ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
---alter pluggable database Hotel_DB open;
--- alter session set container = Hotel_DB;
-grant all privileges to admin;
 
 ----------------------------------------------------------------
 CREATE TABLESPACE HOTEL_TS
@@ -25,7 +22,7 @@ CREATE TABLE ROOM_TYPES (
     room_type_daily_price FLOAT(10) NOT NULL,
     room_type_description NVARCHAR2(200) NOT NULL,
     CONSTRAINT room_type_pk PRIMARY KEY (room_type_id)
-);
+) tablespace HOTEL_TS;
 
 --ДОБАВИТЬ ТИПОВ люкс стандарт и тд
 INSERT INTO ROOM_TYPES(room_type_name, room_type_capacity, room_type_description, room_type_daily_price) VALUES('Standard-one', 1, '37-38 м2, однокомнатные номера, телевизор, кондиционер, Wi-Fi, фен, кровать «King size», письменные принадлежности, чайный набор' , 40.00);
@@ -54,7 +51,7 @@ CREATE TABLE PHOTO (
     photo_source BLOB DEFAULT EMPTY_BLOB(),
     CONSTRAINT photo_pk PRIMARY KEY (photo_id),
     CONSTRAINT photo_room_type_fk FOREIGN KEY (photo_room_type_id) REFERENCES ROOM_TYPES(room_type_id)
-);
+) tablespace HOTEL_TS;
 
 SELECT * FROM PHOTO;
 
@@ -67,11 +64,11 @@ CREATE TABLE GUESTS (
     guest_email NVARCHAR2(50) NOT NULL,
     guest_name NVARCHAR2(50) NOT NULL,
     guest_surname NVARCHAR2(50) NOT NULL,
+    username NVARCHAR2(50) NOT NULL UNIQUE,
     CONSTRAINT guest_pk PRIMARY KEY (guest_id)
-);
+) tablespace HOTEL_TS;
 
-ALTER TABLE GUESTS
-ADD username NVARCHAR2(50) NOT NULL UNIQUE;
+
 
 -------------------------EMPLOYEES-------------------------
 
@@ -83,8 +80,9 @@ CREATE TABLE EMPLOYEES (
     employee_email NVARCHAR2(50) NOT NULL,
     employee_hire_date DATE NOT NULL,   --дата найма
     employee_birth_date DATE NOT NULL,
+    username NVARCHAR2(50) NOT NULL UNIQUE,
     CONSTRAINT employee_pk PRIMARY KEY (employee_id)
-);
+) tablespace HOTEL_TS;
 
 -------------------------ROOMS-------------------------
 
@@ -94,10 +92,8 @@ CREATE TABLE ROOMS (
     room_number NVARCHAR2(50) NOT NULL,
     CONSTRAINT room_pk PRIMARY KEY (room_id),
     CONSTRAINT room_room_type_fk FOREIGN KEY (room_room_type_id) REFERENCES ROOM_TYPES(room_type_id)
-);
+) tablespace HOTEL_TS;
 
-INSERT INTO ROOMS(room_room_type_id, room_number) VALUES(1, '101');
-COMMIT;
 
 -------------------------TARIFF_TYPES-------------------------
 
@@ -107,16 +103,16 @@ CREATE TABLE TARIFF_TYPES (
     tariff_type_description NVARCHAR2(200) NOT NULL,
     tariff_type_daily_price FLOAT(10) NOT NULL,
     CONSTRAINT tariff_type_pk PRIMARY KEY (tariff_type_id)
-);
+) tablespace HOTEL_TS;
 
 SELECT * FROM TARIFF_TYPES;
 
-INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Standart','без завтрака', 0.0);
-INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Standart+','завтрак включен',  15.0);
-INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Business','завтрак включен,  доступ в бизнес-центр, возможность позднего выезда',  20.0);
-INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Half Board','2 приёма пищи, доступ к фитнес-залу',  35.50);
-INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Full Board','3 приёма пищи, доступ к фитнес-залу',  45.0);
-INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('All-Inclusive','неограниченное посещение ресторана, доступ к фитнес-залу, спа-услуги, выезд в любое время',  95.0);
+INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Стандарт','без завтрака', 0.0);
+INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Стандарт+','завтрак включен',  15.0);
+INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Бизнес','завтрак включен,  доступ в бизнес-центр, возможность позднего выезда',  20.0);
+INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Полу-пансион','2 приёма пищи, доступ к фитнес-залу',  35.50);
+INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Пансион','3 приёма пищи, доступ к фитнес-залу',  45.0);
+INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Всё включено','неограниченное посещение ресторана, доступ к фитнес-залу, спа-услуги, выезд в любое время',  95.0);
 COMMIT;
 
 DROP TABLE TARIFF_TYPES ;
@@ -131,7 +127,7 @@ CREATE TABLE SERVICE_TYPES (
     service_type_employee_id NUMBER(10) NOT NULL,
     CONSTRAINT service_type_pk PRIMARY KEY (service_type_id),
     CONSTRAINT service_type_employee_fk FOREIGN KEY (service_type_employee_id) REFERENCES EMPLOYEES(employee_id)
-);
+) tablespace HOTEL_TS;
 
 SELECT * FROM SERVICE_TYPES ;
 -- добавить работников
@@ -161,12 +157,27 @@ CREATE TABLE SERVICES (
     CONSTRAINT service_pk PRIMARY KEY (service_id),
     CONSTRAINT service_service_type_fk FOREIGN KEY (service_type_id) REFERENCES SERVICE_TYPES(service_type_id),
     CONSTRAINT service_guest_fk FOREIGN KEY (service_guest_id) REFERENCES GUESTS(guest_id)
-);
+) tablespace HOTEL_TS;
 
 SELECT * FROM SERVICES;
 
 DROP TABLE SERVICES;
 
+-------------------------BOOKING_STATE-------------------------
+CREATE TABLE BOOKING_STATE (
+    booking_state_id NUMBER(1) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),
+    booking_state NVARCHAR2(100) NOT NULL,
+    CONSTRAINT booking_state_pk PRIMARY KEY (booking_state_id)
+) tablespace HOTEL_TS;
+
+insert into BOOKING_STATE (booking_state)  values ('Забронировано гостем');
+insert into BOOKING_STATE (booking_state)  values ('Одобрено администратором');
+insert into BOOKING_STATE (booking_state)  values ('Отменено гостем');
+commit;
+
+select * from BOOKING_STATE;
+
+drop table BOOKING_STATE;
 -------------------------BOOKING-------------------------
 
 CREATE TABLE BOOKING (
@@ -176,16 +187,17 @@ CREATE TABLE BOOKING (
     booking_start_date DATE NOT NULL,
     booking_end_date DATE NOT NULL,
     booking_tariff_id NUMBER(10) NOT NULL,
-    booking_state NUMBER(1) DEFAULT 0,
+    booking_state NUMBER(1) DEFAULT 1,
     CONSTRAINT booking_pk PRIMARY KEY (booking_id),
     CONSTRAINT booking_room_fk FOREIGN KEY (booking_room_id) REFERENCES ROOMS(room_id),
     CONSTRAINT booking_guest_fk FOREIGN KEY (booking_guest_id) REFERENCES GUESTS(guest_id),
-    CONSTRAINT booking_tariff_fk FOREIGN KEY (booking_tariff_id) REFERENCES TARIFF_TYPES(tariff_type_id)
-);
+    CONSTRAINT booking_tariff_fk FOREIGN KEY (booking_tariff_id) REFERENCES TARIFF_TYPES(tariff_type_id),
+    CONSTRAINT booking_state_fk FOREIGN KEY (booking_state) REFERENCES BOOKING_STATE(booking_state_id)
+) tablespace HOTEL_TS;
 --booking_state:
---0 - забронирован онлайн
---1 - бронь одобрена админом
---2 отменено гостем
+--1 - забронирован онлайн
+--2 - бронь одобрена админом
+--3  отменено гостем
 SELECT * FROM BOOKING;
 
 DROP TABLE BOOKING;
@@ -194,6 +206,5 @@ DROP TABLE BOOKING;
 
 drop table booking;
 drop table SERVICES;
-drop table PERSONS;
-drop table roles;
+
 

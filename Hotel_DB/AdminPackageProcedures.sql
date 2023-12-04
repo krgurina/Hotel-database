@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE HotelAdminPackageCRUD AS
+CREATE OR REPLACE PACKAGE HotelAdminPack AS
     -- 1. работник
     PROCEDURE InsertEmployee(
         p_name NVARCHAR2,
@@ -6,7 +6,9 @@ CREATE OR REPLACE PACKAGE HotelAdminPackageCRUD AS
         p_position NVARCHAR2,
         p_email NVARCHAR2,
         p_hire_date DATE,
-        p_birth_date DATE);
+        p_birth_date DATE,
+        p_username NVARCHAR2);
+
     PROCEDURE UpdateEmployee(
         p_employee_id NUMBER,
         p_employee_name NVARCHAR2,
@@ -111,7 +113,7 @@ PROCEDURE DeleteService(p_service_id NUMBER);
         p_booking_start_date DATE,
         p_booking_end_date DATE,
         p_booking_tariff_id NUMBER,
-        p_booking_state NUMBER DEFAULT 0);
+        p_booking_state NUMBER DEFAULT 1);
     PROCEDURE UpdateBooking(
         p_booking_id NUMBER,
         p_booking_room_id NUMBER,
@@ -125,10 +127,10 @@ PROCEDURE DeleteService(p_service_id NUMBER);
 
     PROCEDURE DeleteGuestCompletely(p_guest_id NUMBER);
 
-END HotelAdminPackageCRUD;
+END HotelAdminPack;
 /
 
-CREATE OR REPLACE PACKAGE BODY HotelAdminPackageCRUD AS
+CREATE OR REPLACE PACKAGE BODY HotelAdminPack AS
 -- ****************************************************************
 -- работник
 -- ****************************************************************
@@ -139,11 +141,19 @@ CREATE OR REPLACE PACKAGE BODY HotelAdminPackageCRUD AS
     p_position NVARCHAR2,
     p_email NVARCHAR2,
     p_hire_date DATE,
-    p_birth_date DATE)
+    p_birth_date DATE,
+    p_username NVARCHAR2)
 AS
     v_current_date DATE := SYSDATE;
     v_min_age CONSTANT NUMBER := 18;
+    v_username_exists NUMBER;
 BEGIN
+    SELECT COUNT(*) INTO v_username_exists FROM ALL_USERS
+    WHERE USERNAME = UPPER(p_username);
+
+    IF v_username_exists > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002,'Ошибка: Пользователь с таким именем ' || p_username || ' уже существует.');
+    END IF;
 
     IF p_hire_date > v_current_date THEN
         RAISE_APPLICATION_ERROR(-20001, 'Дата найма не может быть больше текущей даты.');
@@ -163,17 +173,25 @@ BEGIN
         employee_position,
         employee_email,
         employee_hire_date,
-        employee_birth_date
+        employee_birth_date,
+        username
     ) VALUES (
         p_name,
         p_surname,
         p_position,
         p_email,
         p_hire_date,
-        p_birth_date
+        p_birth_date,
+        p_username
     );
     COMMIT;
-      DBMS_OUTPUT.PUT_LINE('Работник успешно создан.');
+     EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
+                      ' IDENTIFIED BY ' || p_username ||
+                      ' DEFAULT TABLESPACE HOTEL_TS' ||
+                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+
+    EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || p_username;
+    DBMS_OUTPUT.PUT_LINE('Работник успешно добавлен. Ваш логин: '|| p_username || ' Пароль: '|| p_username);
 
 EXCEPTION
     WHEN OTHERS THEN
@@ -291,7 +309,7 @@ BEGIN
                       ' DEFAULT TABLESPACE HOTEL_TS' ||
                       ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
 
-     EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
+    EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
 
     DBMS_OUTPUT.PUT_LINE('Гость успешно создан. Ваш логин: '|| p_username || 'Пароль: '|| p_username);
 
@@ -1012,7 +1030,7 @@ PROCEDURE InsertBooking(
     p_booking_start_date DATE,
     p_booking_end_date DATE,
     p_booking_tariff_id NUMBER,
-    p_booking_state NUMBER DEFAULT 0)
+    p_booking_state NUMBER DEFAULT 1)
 AS
     v_room_count NUMBER;
     v_guest_count NUMBER;
@@ -1045,8 +1063,20 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20004, 'Дата начала бронирования должна быть меньше даты окончания.');
     END IF;
 
-    INSERT INTO BOOKING (booking_room_id, booking_guest_id, booking_start_date, booking_end_date, booking_tariff_id, booking_state)
-    VALUES (p_booking_room_id, p_booking_guest_id, p_booking_start_date, p_booking_end_date, p_booking_tariff_id, p_booking_state);
+    INSERT INTO BOOKING (
+                         booking_room_id,
+                         booking_guest_id,
+                         booking_start_date,
+                         booking_end_date,
+                         booking_tariff_id,
+                         booking_state)
+    VALUES (
+            p_booking_room_id,
+            p_booking_guest_id,
+            p_booking_start_date,
+            p_booking_end_date,
+            p_booking_tariff_id,
+            p_booking_state);
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Бронь успешно добавлена.');
 
@@ -1177,5 +1207,5 @@ END DeleteGuestCompletely;
 
 
 
-END HotelAdminPackageCRUD;
+END HotelAdminPack;
 /

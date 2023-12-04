@@ -23,7 +23,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="Guest" uuid="e5770cda-bb36-4991-a3bc-3b0907096430">
+    <data-source source="LOCAL" name="Employee" uuid="e5770cda-bb36-4991-a3bc-3b0907096430">
       <driver-ref>oracle.19</driver-ref>
       <synchronize>true</synchronize>
       <auto-commit>false</auto-commit>
@@ -34,7 +34,7 @@
       </jdbc-additional-properties>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
-    <data-source source="LOCAL" name="user1" uuid="fa29b578-6e14-4c30-b512-ed2b8863e22c">
+    <data-source source="LOCAL" name="Guest" uuid="fa29b578-6e14-4c30-b512-ed2b8863e22c">
       <driver-ref>oracle.19</driver-ref>
       <synchronize>true</synchronize>
       <auto-commit>false</auto-commit>
