@@ -185,12 +185,12 @@ BEGIN
         p_username
     );
     COMMIT;
-     EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
-                      ' IDENTIFIED BY ' || p_username ||
-                      ' DEFAULT TABLESPACE HOTEL_TS' ||
-                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
-
-    EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || p_username;
+--      EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
+--                       ' IDENTIFIED BY ' || p_username ||
+--                       ' DEFAULT TABLESPACE HOTEL_TS' ||
+--                       ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+--
+--     EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || p_username;
     DBMS_OUTPUT.PUT_LINE('Работник успешно добавлен. Ваш логин: '|| p_username || ' Пароль: '|| p_username);
 
 EXCEPTION
