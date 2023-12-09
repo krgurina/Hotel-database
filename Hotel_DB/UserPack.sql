@@ -26,6 +26,8 @@ CREATE OR REPLACE PACKAGE UserPack AS
         p_end_date DATE DEFAULT NULL,
         p_tariff_id NUMBER DEFAULT NULL);
 
+    PROCEDURE DenyBooking(
+        p_booking_id NUMBER);
 END UserPack;
 /
 
@@ -194,6 +196,9 @@ BEGIN
     SELECT * INTO p_booking_details FROM booking_details_view
     WHERE booking_id = p_booking_id;
 
+    IF p_booking_details.BOOKING_STATE = 3 THEN
+        RAISE_APPLICATION_ERROR(-20006, 'Бронь с указанным ID отменена.');
+    END IF;
     DBMS_OUTPUT.PUT_LINE('Информация о брони с ID ' || p_booking_id || ' успешно получена.');
     DBMS_OUTPUT.PUT_LINE('ID брони: ' || p_booking_details.booking_id);
     DBMS_OUTPUT.PUT_LINE('Начальная дата бронирования: ' || p_booking_details.booking_start_date);
@@ -249,6 +254,31 @@ EXCEPTION
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
 END UpdateBooking;
+
+----------------------------------------------------------------
+PROCEDURE DenyBooking(
+    p_booking_id NUMBER
+)
+AS
+    v_booking_exists NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_booking_exists
+    FROM BOOKING WHERE booking_id = p_booking_id;
+    IF v_booking_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Бронь с указанным ID не найдена.');
+    END IF;
+
+    UPDATE BOOKING
+    SET booking_state = 3
+    WHERE booking_id = p_booking_id;
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Бронь с ID ' || p_booking_id || ' успешно отменена.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+END DenyBooking;
 
 
 

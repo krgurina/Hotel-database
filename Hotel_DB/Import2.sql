@@ -1,7 +1,20 @@
 SELECT * FROM ALL_DIRECTORIES WHERE DIRECTORY_NAME = 'XML_DIR';
 ----------------------------------------------------------------
+begin
+    EXPORT_BOOKING_STATE_XML;
+end;
+----------------------------------------------------------------
+begin
+    IMPORT_BOOKING_STATE_XML;
+end;
+
+
+
+
 
 select * from BOOKING_STATE_XML;
+drop table BOOKING_STATE_XML;
+
 
 CREATE TABLE BOOKING_STATE_XML (
     booking_state_id NUMBER(1) GENERATED AS IDENTITY(START WITH 1 INCREMENT BY 1),

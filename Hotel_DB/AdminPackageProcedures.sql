@@ -9,14 +9,14 @@ CREATE OR REPLACE PACKAGE HotelAdminPack AS
         p_birth_date DATE,
         p_username NVARCHAR2);
 
-    PROCEDURE UpdateEmployee(
+PROCEDURE UpdateEmployee(
         p_employee_id NUMBER,
-        p_employee_name NVARCHAR2,
-        p_employee_surname NVARCHAR2,
-        p_employee_position NVARCHAR2,
-        p_employee_email NVARCHAR2,
-        p_employee_hire_date DATE,
-        p_employee_birth_date DATE);
+        p_employee_name NVARCHAR2 DEFAULT NULL,
+        p_employee_surname NVARCHAR2 DEFAULT NULL,
+        p_employee_position NVARCHAR2 DEFAULT NULL,
+        p_employee_email NVARCHAR2 DEFAULT NULL,
+        p_employee_hire_date DATE DEFAULT NULL,
+        p_employee_birth_date DATE DEFAULT NULL);
     PROCEDURE DeleteEmployee(p_employee_id NUMBER);
 
     --2. гость
@@ -27,9 +27,9 @@ CREATE OR REPLACE PACKAGE HotelAdminPack AS
         p_username NVARCHAR2);
     PROCEDURE UpdateGuest(
         p_guest_id NUMBER,
-        p_email NVARCHAR2,
-        p_name NVARCHAR2,
-        p_surname NVARCHAR2);
+        p_email NVARCHAR2 DEFAULT NULL,
+        p_name NVARCHAR2 DEFAULT NULL,
+        p_surname NVARCHAR2 DEFAULT NULL);
     PROCEDURE DeleteGuest(p_guest_id NUMBER);
 
     --3. тип комнаты
@@ -40,10 +40,10 @@ CREATE OR REPLACE PACKAGE HotelAdminPack AS
         p_room_type_description NVARCHAR2);
     PROCEDURE UpdateRoomType(
         p_room_type_id NUMBER,
-        p_new_room_type_name NVARCHAR2,
-        p_new_room_type_capacity NUMBER,
-        p_new_room_type_daily_price FLOAT,
-        p_new_room_type_description NVARCHAR2);
+        p_new_room_type_name NVARCHAR2 DEFAULT NULL,
+        p_new_room_type_capacity NUMBER DEFAULT NULL,
+        p_new_room_type_daily_price FLOAT DEFAULT NULL,
+        p_new_room_type_description NVARCHAR2 DEFAULT NULL);
     PROCEDURE DeleteRoomType(p_room_type_id NUMBER);
 
     --4. тариф
@@ -52,34 +52,35 @@ CREATE OR REPLACE PACKAGE HotelAdminPack AS
       p_tariff_type_description NVARCHAR2,
       p_tariff_type_daily_price FLOAT);
     PROCEDURE UpdateTariffType(
-      p_tariff_type_id          NUMBER,
-      p_new_tariff_type_name    NVARCHAR2,
-      p_new_tariff_type_description NVARCHAR2,
-      p_new_tariff_type_daily_price FLOAT);
+        p_tariff_type_id          NUMBER DEFAULT NULL,
+        p_tariff_type_name        NVARCHAR2 DEFAULT NULL,
+        p_tariff_type_description NVARCHAR2 DEFAULT NULL,
+        p_tariff_type_daily_price FLOAT DEFAULT NULL);
     PROCEDURE DeleteTariffType (p_tariff_type_id NUMBER);
 
     --5. тип сервиса
     PROCEDURE InsertServiceType(
-    p_name NVARCHAR2,
-    p_description NVARCHAR2,
-    p_daily_price FLOAT,
-    p_employee_id NUMBER);
+        p_name NVARCHAR2,
+        p_description NVARCHAR2,
+        p_daily_price FLOAT,
+        p_employee_id NUMBER);
     PROCEDURE UpdateServiceType(
     p_service_type_id NUMBER,
-    p_name NVARCHAR2,
-    p_description NVARCHAR2,
-    p_daily_price FLOAT,
-    p_employee_id NUMBER);
+    p_name NVARCHAR2 DEFAULT NULL,
+    p_description NVARCHAR2 DEFAULT NULL,
+    p_daily_price FLOAT DEFAULT NULL,
+    p_employee_id NUMBER DEFAULT NULL);
     PROCEDURE DeleteServiceType(p_service_type_id NUMBER);
 
     --6. фото
     PROCEDURE InsertPhoto(
-    p_photo_room_type_id NUMBER,
-    p_photo_source BLOB);
-    PROCEDURE UpdatePhoto(
+        p_photo_room_type_id NUMBER,
+        p_photo_source VARCHAR2);
+PROCEDURE UpdatePhoto(
     p_photo_id NUMBER,
     p_photo_room_type_id NUMBER,
-    p_photo_source BLOB);
+    p_photo_source VARCHAR2
+);
     PROCEDURE DeletePhoto(p_photo_id NUMBER);
 
     --7. комната
@@ -88,8 +89,8 @@ CREATE OR REPLACE PACKAGE HotelAdminPack AS
         p_room_number NVARCHAR2);
     PROCEDURE UpdateRoom(
         p_room_id NUMBER,
-        p_room_room_type_id NUMBER,
-        p_room_number NVARCHAR2);
+    p_room_room_type_id NUMBER DEFAULT NULL,
+    p_room_number NVARCHAR2 DEFAULT NULL);
     PROCEDURE DeleteRoom(p_room_id NUMBER);
 
     --8. сервис
@@ -100,10 +101,10 @@ PROCEDURE InsertService(
     p_service_end_date DATE);
     PROCEDURE UpdateService(
     p_service_id NUMBER,
-    p_service_type_id NUMBER,
-    p_service_guest_id NUMBER,
-    p_service_start_date DATE,
-    p_service_end_date DATE);
+    p_service_type_id NUMBER DEFAULT NULL,
+    p_service_guest_id NUMBER DEFAULT NULL,
+    p_service_start_date DATE DEFAULT NULL,
+    p_service_end_date DATE DEFAULT NULL);
 PROCEDURE DeleteService(p_service_id NUMBER);
 
     --9. бронь
@@ -147,6 +148,7 @@ AS
     v_current_date DATE := SYSDATE;
     v_min_age CONSTANT NUMBER := 18;
     v_username_exists NUMBER;
+    v_employee_id NUMBER;
 BEGIN
     SELECT COUNT(*) INTO v_username_exists FROM ALL_USERS
     WHERE USERNAME = UPPER(p_username);
@@ -167,6 +169,7 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20003, 'Неправильный формат email.');
     END IF;
 
+
     INSERT INTO EMPLOYEES (
         employee_name,
         employee_surname,
@@ -174,24 +177,25 @@ BEGIN
         employee_email,
         employee_hire_date,
         employee_birth_date,
-        username
-    ) VALUES (
+        username)
+    VALUES (
         p_name,
         p_surname,
         p_position,
         p_email,
         p_hire_date,
         p_birth_date,
-        p_username
-    );
+        p_username)returning employee_id into v_employee_id;
     COMMIT;
---      EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
---                       ' IDENTIFIED BY ' || p_username ||
---                       ' DEFAULT TABLESPACE HOTEL_TS' ||
---                       ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
---
---     EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || p_username;
-    DBMS_OUTPUT.PUT_LINE('Работник успешно добавлен. Ваш логин: '|| p_username || ' Пароль: '|| p_username);
+
+    EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
+                      ' IDENTIFIED BY ' || p_username ||
+                      ' DEFAULT TABLESPACE HOTEL_TS' ||
+                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+
+    EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || p_username;
+
+    DBMS_OUTPUT.PUT_LINE('Работник успешно добавлен. Ваш ID: ' || v_employee_id||' Логин: '|| p_username || ' Пароль: '|| p_username);
 
 EXCEPTION
     WHEN OTHERS THEN
@@ -203,22 +207,25 @@ END InsertEmployee;
 -- изменить рабоника
 PROCEDURE UpdateEmployee(
     p_employee_id NUMBER,
-    p_employee_name NVARCHAR2,
-    p_employee_surname NVARCHAR2,
-    p_employee_position NVARCHAR2,
-    p_employee_email NVARCHAR2,
-    p_employee_hire_date DATE,
-    p_employee_birth_date DATE)
+    p_employee_name NVARCHAR2 DEFAULT NULL,
+    p_employee_surname NVARCHAR2 DEFAULT NULL,
+    p_employee_position NVARCHAR2 DEFAULT NULL,
+    p_employee_email NVARCHAR2 DEFAULT NULL,
+    p_employee_hire_date DATE DEFAULT NULL,
+    p_employee_birth_date DATE DEFAULT NULL)
 AS
     v_current_date DATE := SYSDATE;
     v_min_age CONSTANT NUMBER := 18;
-    v_employee_count NUMBER;
+    --v_employee_count NUMBER;
+    v_existing_employee EMPLOYEES%ROWTYPE;
+
 BEGIN
-    SELECT COUNT(*) INTO v_employee_count
+    SELECT *
+    INTO v_existing_employee
     FROM EMPLOYEES
     WHERE employee_id = p_employee_id;
 
-    IF v_employee_count = 0 THEN
+    IF v_existing_employee.EMPLOYEE_ID IS NULL THEN
         RAISE_APPLICATION_ERROR(-20001, 'Работник с указанным ID не найден.');
     END IF;
 
@@ -232,12 +239,12 @@ BEGIN
 
     UPDATE EMPLOYEES
     SET
-        employee_name = p_employee_name,
-        employee_surname = p_employee_surname,
-        employee_position = p_employee_position,
-        employee_email = p_employee_email,
-        employee_hire_date = p_employee_hire_date,
-        employee_birth_date = p_employee_birth_date
+        employee_name = COALESCE(p_employee_name, v_existing_employee.EMPLOYEE_NAME),
+        employee_surname = COALESCE(p_employee_surname, v_existing_employee.EMPLOYEE_SURNAME),
+        employee_position = COALESCE(p_employee_position, v_existing_employee.EMPLOYEE_POSITION),
+        employee_email = COALESCE(p_employee_email, v_existing_employee.EMPLOYEE_EMAIL),
+        employee_hire_date = COALESCE(p_employee_hire_date, v_existing_employee.EMPLOYEE_HIRE_DATE),
+        employee_birth_date =  COALESCE(p_employee_birth_date, v_existing_employee.EMPLOYEE_BIRTH_DATE)
     WHERE employee_id = p_employee_id;
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Работник успешно обновлен.');
@@ -288,6 +295,7 @@ PROCEDURE InsertGuest(
 )
 AS
     v_username_exists NUMBER;
+    v_guest_id NUMBER;
 BEGIN
     SELECT COUNT(*) INTO v_username_exists FROM ALL_USERS
     WHERE USERNAME = UPPER(p_username);
@@ -301,17 +309,17 @@ BEGIN
     END IF;
 
     INSERT INTO GUESTS (guest_email, guest_name, guest_surname, USERNAME)
-    VALUES (p_email, p_name, p_surname,p_username);
+    VALUES (p_email, p_name, p_surname,p_username) RETURNING guest_id INTO v_guest_id;
     COMMIT;
 
     EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
                       ' IDENTIFIED BY ' || p_username ||
                       ' DEFAULT TABLESPACE HOTEL_TS' ||
                       ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+--
+     EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
 
-    EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
-
-    DBMS_OUTPUT.PUT_LINE('Гость успешно создан. Ваш логин: '|| p_username || 'Пароль: '|| p_username);
+    DBMS_OUTPUT.PUT_LINE('Гость успешно создан. Ваш ID: '||v_guest_id||' Логин: '|| p_username || ' Пароль: '|| p_username);
 
 EXCEPTION
     WHEN OTHERS THEN
@@ -323,17 +331,18 @@ END InsertGuest;
 --изменить гостя
 PROCEDURE UpdateGuest(
     p_guest_id NUMBER,
-    p_email NVARCHAR2,
-    p_name NVARCHAR2,
-    p_surname NVARCHAR2)
+    p_email NVARCHAR2 DEFAULT NULL,
+    p_name NVARCHAR2 DEFAULT NULL,
+    p_surname NVARCHAR2 DEFAULT NULL)
 AS
-    v_guest_count NUMBER;
-BEGIN
-    SELECT COUNT(*) INTO v_guest_count
-    FROM GUESTS
-    WHERE guest_id = p_guest_id;
+    v_existing_guest GUESTS%ROWTYPE;
 
-    IF v_guest_count = 0 THEN
+BEGIN
+    SELECT * INTO v_existing_guest
+    FROM GUESTS
+    WHERE GUEST_ID = p_guest_id;
+
+    IF v_existing_guest.GUEST_ID IS NULL THEN
         RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
     END IF;
 
@@ -343,9 +352,9 @@ BEGIN
 
     UPDATE GUESTS
     SET
-        guest_email = p_email,
-        guest_name = p_name,
-        guest_surname = p_surname
+        guest_email = COALESCE(p_email, v_existing_guest.GUEST_EMAIL),
+        guest_name = COALESCE(p_name, v_existing_guest.GUEST_NAME),
+        guest_surname = COALESCE(p_surname, v_existing_guest.GUEST_SURNAME)
     WHERE
         guest_id = p_guest_id;
     COMMIT;
@@ -356,7 +365,6 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-        --RAISE; -- Повторное возбуждение исключения для передачи его вызывающему коду
 END UpdateGuest;
 
 
@@ -397,6 +405,7 @@ PROCEDURE InsertRoomType(
   p_room_type_description NVARCHAR2
 ) AS
     existing_count NUMBER;
+    v_room_type_id NUMBER;
 BEGIN
     IF p_room_type_capacity < 0 THEN
         RAISE_APPLICATION_ERROR(-20002, 'Вместимость типа комнаты должна быть больше 0.');
@@ -413,9 +422,9 @@ BEGIN
     END IF;
 
     INSERT INTO ROOM_TYPES (room_type_name, room_type_capacity, room_type_daily_price, room_type_description)
-    VALUES (p_room_type_name, p_room_type_capacity, p_room_type_daily_price, p_room_type_description);
+    VALUES (p_room_type_name, p_room_type_capacity, p_room_type_daily_price, p_room_type_description) returning ROOM_TYPE_ID into v_room_type_id;
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Тип комнаты успешно создан.');
+    DBMS_OUTPUT.PUT_LINE('Тип комнаты успешно создан. ID: '||v_room_type_id);
 EXCEPTION
     WHEN OTHERS THEN
     DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
@@ -425,42 +434,45 @@ END InsertRoomType;
 
 --изменить тип комнаты
 PROCEDURE UpdateRoomType(
-  p_room_type_id NUMBER,
-  p_new_room_type_name NVARCHAR2,
-  p_new_room_type_capacity NUMBER,
-  p_new_room_type_daily_price FLOAT,
-  p_new_room_type_description NVARCHAR2
+    p_room_type_id NUMBER,
+    p_new_room_type_name NVARCHAR2 DEFAULT NULL,
+    p_new_room_type_capacity NUMBER DEFAULT NULL,
+    p_new_room_type_daily_price FLOAT DEFAULT NULL,
+    p_new_room_type_description NVARCHAR2 DEFAULT NULL
 ) AS
-  existing_count NUMBER;
+    v_existing_count NUMBER;
+    v_existing_room_type ROOM_TYPES%ROWTYPE;
 BEGIN
-    SELECT COUNT(*) INTO existing_count FROM ROOM_TYPES
-        WHERE room_type_id = p_room_type_id;
-    IF existing_count = 0 THEN
+    -- Проверка наличия типа комнаты с указанным ID
+    SELECT *
+    INTO v_existing_room_type
+    FROM ROOM_TYPES
+    WHERE room_type_id = p_room_type_id;
+
+    IF v_existing_room_type.room_type_id IS NULL THEN
         RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не существует.');
     END IF;
 
-    IF p_new_room_type_capacity <= 0 THEN
-        RAISE_APPLICATION_ERROR(-20003, 'Новая вместимость типа комнаты должна быть больше 0.');
-    END IF;
-
-    IF p_new_room_type_daily_price <= 0 THEN
-        RAISE_APPLICATION_ERROR(-20004, 'Новая ежедневная стоимость типа комнаты должна быть больше 0.');
-    END IF;
-
+    -- Обновление данных типа комнаты с использованием COALESCE
     UPDATE ROOM_TYPES
     SET
-        room_type_name = p_new_room_type_name,
-        room_type_capacity = p_new_room_type_capacity,
-        room_type_daily_price = p_new_room_type_daily_price,
-        room_type_description = p_new_room_type_description
+        room_type_name = COALESCE(p_new_room_type_name, v_existing_room_type.room_type_name),
+        room_type_capacity = COALESCE(p_new_room_type_capacity, v_existing_room_type.room_type_capacity),
+        room_type_daily_price = COALESCE(p_new_room_type_daily_price, v_existing_room_type.room_type_daily_price),
+        room_type_description = COALESCE(p_new_room_type_description, v_existing_room_type.room_type_description)
     WHERE room_type_id = p_room_type_id;
+
+    -- Дополнительные проверки, если необходимо
+
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Тип комнаты успешно обновлен.');
+
 EXCEPTION
-  WHEN OTHERS THEN
-    DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
-    ROLLBACK;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
 END UpdateRoomType;
+
 
 
 --удалить тип комнаты
@@ -497,6 +509,7 @@ PROCEDURE InsertTariffType(
   p_tariff_type_daily_price FLOAT
 ) AS
   v_existing_count NUMBER;
+  v_tariff_type_id NUMBER;
 
 BEGIN
     IF p_tariff_type_daily_price <= 0 THEN
@@ -512,9 +525,9 @@ BEGIN
     END IF;
 
     INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price)
-    VALUES (p_tariff_type_name, p_tariff_type_description, p_tariff_type_daily_price);
+    VALUES (p_tariff_type_name, p_tariff_type_description, p_tariff_type_daily_price) returning TARIFF_TYPE_ID into v_tariff_type_id;
     COMMIT;
-  DBMS_OUTPUT.PUT_LINE('Тариф успешно добавлен.');
+  DBMS_OUTPUT.PUT_LINE('Тариф успешно добавлен. ID: ' || v_tariff_type_id);
 EXCEPTION
   WHEN OTHERS THEN
     DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
@@ -524,28 +537,29 @@ END InsertTariffType;
 
 --изменить тип тарифа
 PROCEDURE UpdateTariffType(
-  p_tariff_type_id          NUMBER,
-  p_new_tariff_type_name    NVARCHAR2,
-  p_new_tariff_type_description NVARCHAR2,
-  p_new_tariff_type_daily_price FLOAT
+  p_tariff_type_id          NUMBER DEFAULT NULL,
+  p_tariff_type_name        NVARCHAR2 DEFAULT NULL,
+  p_tariff_type_description NVARCHAR2 DEFAULT NULL,
+  p_tariff_type_daily_price FLOAT DEFAULT NULL
 ) AS
   v_existing_count NUMBER;
+  v_existing_tariff_type TARIFF_TYPES%rowtype;
 
 BEGIN
-    SELECT COUNT(*) INTO v_existing_count FROM TARIFF_TYPES
+    SELECT * INTO v_existing_tariff_type FROM TARIFF_TYPES
     WHERE tariff_type_id = p_tariff_type_id;
 
-    IF v_existing_count = 0 THEN
+    IF v_existing_tariff_type.TARIFF_TYPE_ID IS NULL THEN
         RAISE_APPLICATION_ERROR(-20001, 'Тариф с указанным ID не существует.');
     END IF;
 
-    IF p_new_tariff_type_daily_price <= 0 THEN
+    IF p_tariff_type_daily_price <= 0 THEN
         RAISE_APPLICATION_ERROR(-20003, 'Новая ежедневная цена тарифа должна быть больше 0.');
     END IF;
 
   -- Проверка наличия такого же тарифа
     SELECT COUNT(*) INTO v_existing_count FROM TARIFF_TYPES
-    WHERE tariff_type_name = p_new_tariff_type_name
+    WHERE tariff_type_name = p_tariff_type_name
     AND tariff_type_id != p_tariff_type_id;
 
     IF v_existing_count > 0 THEN
@@ -554,10 +568,10 @@ BEGIN
 
   -- Обновление данных тарифа
   UPDATE TARIFF_TYPES
-  SET
-    tariff_type_name = p_new_tariff_type_name,
-    tariff_type_description = p_new_tariff_type_description,
-    tariff_type_daily_price = p_new_tariff_type_daily_price
+  SET   --COALESCE(p_employee_name, v_existing_employee.EMPLOYEE_NAME);
+    tariff_type_name = COALESCE(p_tariff_type_name, v_existing_tariff_type.TARIFF_TYPE_NAME),
+    tariff_type_description = COALESCE(p_tariff_type_description, v_existing_tariff_type.TARIFF_TYPE_DESCRIPTION),
+    tariff_type_daily_price = COALESCE(p_tariff_type_daily_price, v_existing_tariff_type.TARIFF_TYPE_DAILY_PRICE)
   WHERE tariff_type_id = p_tariff_type_id;
   COMMIT;
   DBMS_OUTPUT.PUT_LINE('Тариф успешно обновлен.');
@@ -607,6 +621,7 @@ PROCEDURE InsertServiceType(
     p_employee_id NUMBER)
 AS
     v_employee_count NUMBER;
+    v_service_type_id NUMBER;
 
 BEGIN
     SELECT COUNT(*) INTO v_employee_count
@@ -626,9 +641,9 @@ BEGIN
         p_name,
         p_description,
         p_daily_price,
-        p_employee_id);
+        p_employee_id) returning SERVICE_TYPE_ID into v_service_type_id;
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Тип сервиса успешно создан.');
+    DBMS_OUTPUT.PUT_LINE('Тип сервиса успешно создан. ID: '|| v_service_type_id);
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
@@ -639,43 +654,45 @@ END InsertServiceType;
 --изменить тип сервиса
 PROCEDURE UpdateServiceType(
     p_service_type_id NUMBER,
-    p_name NVARCHAR2,
-    p_description NVARCHAR2,
-    p_daily_price FLOAT,
-    p_employee_id NUMBER)
+    p_name NVARCHAR2 DEFAULT NULL,
+    p_description NVARCHAR2 DEFAULT NULL,
+    p_daily_price FLOAT DEFAULT NULL,
+    p_employee_id NUMBER DEFAULT NULL)
 AS
     v_employee_count NUMBER;
-    v_service_type_count NUMBER;
+    v_service_type SERVICE_TYPES%ROWTYPE;
 
 BEGIN
+    SELECT * INTO v_service_type
+    FROM SERVICE_TYPES
+    WHERE SERVICE_TYPE_ID = p_service_type_id;
 
-    SELECT COUNT(*) INTO v_service_type_count
-        FROM service_types
-        WHERE service_type_id = p_service_type_id;
-    IF v_service_type_count = 0 THEN
+    IF v_service_type.SERVICE_TYPE_ID IS NULL THEN
         RAISE_APPLICATION_ERROR(-20001, 'Тип сервиса с указанным ID не найден.');
     END IF;
 
-    SELECT COUNT(*) INTO v_employee_count
-    FROM EMPLOYEES
-    WHERE employee_id = p_employee_id;
-    IF v_employee_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Работник с указанным ID не найден.');
+        IF p_employee_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_employee_count
+        FROM EMPLOYEES
+        WHERE EMPLOYEE_ID = p_employee_id;
+        IF v_employee_count = 0 THEN
+            RAISE_APPLICATION_ERROR(-20002, 'Работник с указанным ID не найден.');
+        END IF;
     END IF;
+
 
     UPDATE SERVICE_TYPES
     SET
-        service_type_name = p_name,
-        service_type_description = p_description,
-        service_type_daily_price = p_daily_price,
-        service_type_employee_id = p_employee_id
+        service_type_name = COALESCE(p_name, v_service_type.SERVICE_TYPE_NAME),
+        service_type_description = COALESCE(p_description, v_service_type.SERVICE_TYPE_DESCRIPTION),
+        service_type_daily_price = COALESCE(p_daily_price, v_service_type.SERVICE_TYPE_DAILY_PRICE),
+        service_type_employee_id = COALESCE(p_employee_id, v_service_type.SERVICE_TYPE_EMPLOYEE_ID)
     WHERE service_type_id = p_service_type_id;
     COMMIT;
       DBMS_OUTPUT.PUT_LINE('Тип сервиса успешно обновлен.');
 
 EXCEPTION
     WHEN OTHERS THEN
-        -- Логирование или обработка других ошибок, если необходимо
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
 END UpdateServiceType;
@@ -710,30 +727,80 @@ END DeleteServiceType;
 -- ФОТО
 -- ****************************************************************
 -- --создать галерею фото
-PROCEDURE InsertPhoto(
-    p_photo_room_type_id NUMBER,
-    p_photo_source BLOB)
-AS
-        v_room_type_count NUMBER;
+-- PROCEDURE InsertPhoto(
+--     p_photo_room_type_id NUMBER,
+--     p_photo_source BLOB)
+-- AS
+--         v_room_type_count NUMBER;
+--
+-- BEGIN
+--     SELECT COUNT(*) INTO v_room_type_count
+--         FROM ROOM_TYPES
+--         WHERE room_type_id = p_photo_room_type_id;
+--     IF v_room_type_count = 0 THEN
+--         RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
+--     END IF;
+--
+--     INSERT INTO PHOTO (photo_room_type_id, photo_source)
+--     VALUES (p_photo_room_type_id, p_photo_source);
+--     COMMIT;
+--     DBMS_OUTPUT.PUT_LINE('Фото успешно добавлено.');
+--
+-- EXCEPTION
+--     WHEN OTHERS THEN
+--         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+--         ROLLBACK;
+-- END InsertPhoto;
 
-BEGIN
+
+--------
+  PROCEDURE InsertPhoto(
+    p_photo_room_type_id NUMBER,
+    p_photo_source VARCHAR2
+  ) AS
+    v_blob BLOB;
+    v_room_type_count NUMBER;
+    v_photo_id NUMBER;
+  BEGIN
+    -- Проверка существования типа комнаты
     SELECT COUNT(*) INTO v_room_type_count
-        FROM ROOM_TYPES
-        WHERE room_type_id = p_photo_room_type_id;
+    FROM ROOM_TYPES
+    WHERE room_type_id = p_photo_room_type_id;
+
     IF v_room_type_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
+      RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
     END IF;
 
-    INSERT INTO PHOTO (photo_room_type_id, photo_source)
-    VALUES (p_photo_room_type_id, p_photo_source);
-    COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Фото успешно добавлено.');
+    -- Извлечение содержимого файла изображения и запись в BLOB
+    DBMS_LOB.createtemporary(v_blob, TRUE);
 
-EXCEPTION
+    DECLARE
+      v_file BFILE := BFILENAME('MEDIA_DIR', p_photo_source); -- Укажите путь к директории с изображениями
+    BEGIN
+      DBMS_LOB.fileopen(v_file, DBMS_LOB.file_readonly);
+      DBMS_LOB.loadfromfile(v_blob, v_file, DBMS_LOB.getlength(v_file));
+      DBMS_LOB.fileclose(v_file);
+    EXCEPTION
+      WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Ошибка при загрузке изображения: ' || SQLERRM);
+        DBMS_LOB.fileclose(v_file);
+        DBMS_LOB.freetemporary(v_blob);
+        RETURN;
+    END;
+
+    -- Вставка записи в таблицу PHOTO
+    INSERT INTO PHOTO (photo_room_type_id, photo_source)
+    VALUES (p_photo_room_type_id, v_blob) returning photo_id into v_photo_id;
+
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Фото успешно добавлено. ID: ' || v_photo_id);
+
+  EXCEPTION
     WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
-        ROLLBACK;
-END InsertPhoto;
+      DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+      ROLLBACK;
+  END InsertPhoto;
 
 
 
@@ -741,40 +808,76 @@ END InsertPhoto;
 PROCEDURE UpdatePhoto(
     p_photo_id NUMBER,
     p_photo_room_type_id NUMBER,
-    p_photo_source BLOB)
+    p_photo_source VARCHAR2
+)
 AS
+    v_existing_room_type_id NUMBER;
+    v_existing_photo_source BLOB;
     v_room_type_count NUMBER;
     v_photo_count NUMBER;
-
+    v_blob BLOB;
 BEGIN
-
     SELECT COUNT(*) INTO v_photo_count
-        FROM PHOTO
-        WHERE photo_id = p_photo_id;
+        FROM PHOTO WHERE photo_id = p_photo_id;
+
     IF v_photo_count = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Фото с указанным ID не найдено.');
     END IF;
 
+    -- Получение существующих данных
+    SELECT photo_room_type_id, photo_source
+    INTO v_existing_room_type_id, v_existing_photo_source
+    FROM PHOTO
+    WHERE photo_id = p_photo_id;
 
-        SELECT COUNT(*) INTO v_room_type_count
-        FROM ROOM_TYPES
-        WHERE room_type_id = p_photo_room_type_id;
+    -- Проверка существования типа комнаты
+    SELECT COUNT(*) INTO v_room_type_count
+    FROM ROOM_TYPES
+    WHERE room_type_id = p_photo_room_type_id;
+
     IF v_room_type_count = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
     END IF;
 
+    -- Извлечение содержимого нового файла изображения и запись в BLOB
+    DBMS_LOB.createtemporary(v_blob, TRUE);
+
+    DECLARE
+        v_file BFILE := BFILENAME('MEDIA_DIR', p_photo_source);
+    BEGIN
+        DBMS_LOB.fileopen(v_file, DBMS_LOB.file_readonly);
+        DBMS_LOB.loadfromfile(v_blob, v_file, DBMS_LOB.getlength(v_file));
+        DBMS_LOB.fileclose(v_file);
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Ошибка при загрузке изображения: ' || SQLERRM);
+            DBMS_LOB.fileclose(v_file);
+            DBMS_LOB.freetemporary(v_blob);
+            RETURN;
+    END;
+
+    -- Обновление записи в таблице PHOTO
     UPDATE PHOTO
-    SET photo_room_type_id = p_photo_room_type_id,
-        photo_source = p_photo_source
+    SET
+        photo_room_type_id = CASE WHEN p_photo_room_type_id IS NOT NULL THEN p_photo_room_type_id ELSE v_existing_room_type_id END,
+        photo_source = CASE WHEN p_photo_source IS NOT NULL THEN v_blob ELSE v_existing_photo_source END
     WHERE photo_id = p_photo_id;
+
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Фото успешно обновлено.');
+
+    DBMS_OUTPUT.PUT_LINE('Фото успешно обновлено. ID: ' || p_photo_id);
 
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
 END UpdatePhoto;
+
+
+
+
+
+
 
 
 --удалить галерею фото
@@ -834,32 +937,46 @@ END InsertRoom;
 --изменить комнату
 PROCEDURE UpdateRoom(
     p_room_id NUMBER,
-    p_room_room_type_id NUMBER,
-    p_room_number NVARCHAR2)
+    p_room_room_type_id NUMBER DEFAULT NULL,
+    p_room_number NVARCHAR2 DEFAULT NULL)
 AS
     v_room_type_count NUMBER;
     v_room_count NUMBER;
+    v_old_room ROOMS%ROWTYPE;
 
 BEGIN
-
+    -- Проверка наличия комнаты с указанным ID
     SELECT COUNT(*) INTO v_room_count
-        FROM ROOMS
-        WHERE room_id = p_room_id;
+    FROM ROOMS
+    WHERE room_id = p_room_id;
+
     IF v_room_count = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдено.');
     END IF;
 
-    SELECT COUNT(*) INTO v_room_type_count
+    -- Получение старых данных комнаты
+    SELECT * INTO v_old_room
+    FROM ROOMS
+    WHERE room_id = p_room_id;
+
+    -- Проверка наличия типа комнаты с указанным ID
+    IF p_room_room_type_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_room_type_count
         FROM ROOM_TYPES
         WHERE room_type_id = p_room_room_type_id;
-    IF v_room_type_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
+
+        IF v_room_type_count = 0 THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
+        END IF;
     END IF;
 
+    -- Обновление данных комнаты с использованием COALESCE
     UPDATE ROOMS
-    SET room_room_type_id = p_room_room_type_id,
-        room_number = p_room_number
+    SET
+        room_room_type_id = COALESCE(p_room_room_type_id, v_old_room.room_room_type_id),
+        room_number = COALESCE(p_room_number, v_old_room.room_number)
     WHERE room_id = p_room_id;
+
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Комната успешно обновлена.');
 
@@ -868,6 +985,7 @@ EXCEPTION
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
 END UpdateRoom;
+
 
 
 --удалить комнату
@@ -908,29 +1026,54 @@ PROCEDURE InsertService(
 AS
     v_service_type_count NUMBER;
     v_guest_count NUMBER;
+    v_booking_count NUMBER;
+    v_service_id NUMBER;
 BEGIN
+    -- Проверка существования типа сервиса
     SELECT COUNT(*) INTO v_service_type_count
-        FROM service_types
-        WHERE service_type_id = p_service_type_id;
+    FROM service_types
+    WHERE service_type_id = p_service_type_id;
+
     IF v_service_type_count = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Тип сервиса с указанным ID не найден.');
     END IF;
 
+    -- Проверка существования гостя
     SELECT COUNT(*) INTO v_guest_count
-        FROM GUESTS
-        WHERE guest_id = p_service_guest_id;
+    FROM GUESTS
+    WHERE guest_id = p_service_guest_id;
     IF v_guest_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+        RAISE_APPLICATION_ERROR(-20002, 'Гость с указанным ID не найден.');
+    END IF;
+
+    -- Проверка, что гость имеет бронь на указанный период
+    SELECT COUNT(*) INTO v_booking_count
+    FROM BOOKING
+    WHERE BOOKING_GUEST_ID = p_service_guest_id
+        AND (p_service_start_date BETWEEN booking_start_date AND booking_end_date
+             OR p_service_end_date BETWEEN booking_start_date AND booking_end_date);
+
+    IF v_booking_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20003, 'Гость не имеет брони на указанный период.');
     END IF;
 
     IF p_service_start_date >= p_service_end_date THEN
-        RAISE_APPLICATION_ERROR(-20003, 'Дата начала услуги должна быть меньше даты окончания.');
+        RAISE_APPLICATION_ERROR(-20004, 'Дата начала услуги должна быть меньше даты окончания.');
     END IF;
 
-    INSERT INTO SERVICES (service_type_id, service_guest_id, service_start_date, service_end_date)
-    VALUES (p_service_type_id, p_service_guest_id, p_service_start_date, p_service_end_date);
+    INSERT INTO SERVICES (
+                          service_type_id,
+                          service_guest_id,
+                          service_start_date,
+                          service_end_date)
+    VALUES (
+            p_service_type_id,
+            p_service_guest_id,
+            p_service_start_date,
+            p_service_end_date) returning SERVICE_ID into v_service_id;
+
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Сервис успешно добавлен.');
+    DBMS_OUTPUT.PUT_LINE('Сервис успешно добавлен. ID: '|| v_service_id);
 
 EXCEPTION
     WHEN OTHERS THEN
@@ -939,17 +1082,19 @@ EXCEPTION
 END InsertService;
 
 
+
 --изменить сервис
 PROCEDURE UpdateService(
     p_service_id NUMBER,
-    p_service_type_id NUMBER,
-    p_service_guest_id NUMBER,
-    p_service_start_date DATE,
-    p_service_end_date DATE)
+    p_service_type_id NUMBER DEFAULT NULL,
+    p_service_guest_id NUMBER DEFAULT NULL,
+    p_service_start_date DATE DEFAULT NULL,
+    p_service_end_date DATE DEFAULT NULL)
 AS
     v_service_count NUMBER;
     v_service_type_count NUMBER;
     v_guest_count NUMBER;
+    v_existing_servise SERVICES%ROWTYPE;
 
 BEGIN
     SELECT COUNT(*) INTO v_service_count
@@ -959,31 +1104,46 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'Услуга с указанным ID не найдено.');
     END IF;
 
-    SELECT COUNT(*) INTO v_service_type_count
+
+    SELECT * INTO v_existing_servise
+    FROM SERVICES
+    WHERE SERVICE_ID = p_service_id;
+
+    --1
+    IF p_service_type_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_service_type_count
         FROM service_types
         WHERE service_type_id = p_service_type_id;
-    IF v_service_type_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Тип сервиса с указанным ID не найден.');
+
+        IF v_service_type_count = 0 THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Тип сервиса с указанным ID не найден.');
+        END IF;
     END IF;
 
-    SELECT COUNT(*) INTO v_guest_count
-        FROM GUESTS
-        WHERE guest_id = p_service_guest_id;
-    IF v_guest_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+
+    --2
+    IF p_service_guest_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_guest_count
+                FROM GUESTS
+                WHERE guest_id = p_service_guest_id;
+            IF v_guest_count = 0 THEN
+                RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+            END IF;
     END IF;
+
+
+    UPDATE SERVICES
+    SET
+        service_type_id = COALESCE(p_service_type_id, v_existing_servise.SERVICE_TYPE_ID),
+        service_guest_id = COALESCE(p_service_guest_id, v_existing_servise.SERVICE_GUEST_ID),
+        service_start_date = COALESCE(p_service_start_date, v_existing_servise.SERVICE_START_DATE),
+        service_end_date = COALESCE(p_service_end_date,  v_existing_servise.SERVICE_END_DATE)
+    WHERE service_id = p_service_id;
 
     IF p_service_start_date >= p_service_end_date THEN
         RAISE_APPLICATION_ERROR(-20004, 'Дата начала услуги должна быть меньше даты окончания.');
     END IF;
 
-    UPDATE SERVICES
-    SET
-        service_type_id = p_service_type_id,
-        service_guest_id = p_service_guest_id,
-        service_start_date = p_service_start_date,
-        service_end_date = p_service_end_date
-    WHERE service_id = p_service_id;
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Сервис успешно обновлен.');
 

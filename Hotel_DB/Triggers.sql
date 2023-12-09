@@ -20,12 +20,14 @@ AFTER INSERT ON GUESTS
 FOR EACH ROW
 DECLARE
 BEGIN
-  EXECUTE IMMEDIATE 'CREATE USER ' || :NEW.USERNAME ||
-                    ' IDENTIFIED BY ' || :NEW.USERNAME ||
-                    ' DEFAULT TABLESPACE HOTEL_TS' ||
-                    ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+--   EXECUTE IMMEDIATE 'CREATE USER ' || :NEW.USERNAME ||
+--                     ' IDENTIFIED BY ' || :NEW.USERNAME ||
+--                     ' DEFAULT TABLESPACE HOTEL_TS' ||
+--                     ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
 
-  EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || :NEW.USERNAME;
+  --EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || :NEW.USERNAME;
+    DBMS_OUTPUT.PUT_LINE('триггер сработал');
+
 EXCEPTION
   WHEN OTHERS THEN
     DBMS_OUTPUT.PUT_LINE('Произошла ошибка при добавлении гостя: ' || SQLERRM);
@@ -38,17 +40,24 @@ AFTER INSERT ON EMPLOYEES
 FOR EACH ROW
 DECLARE
 BEGIN
-  EXECUTE IMMEDIATE 'CREATE USER ' || :NEW.USERNAME ||
-                    ' IDENTIFIED BY ' || :NEW.USERNAME ||
-                    ' DEFAULT TABLESPACE HOTEL_TS' ||
-                    ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+  DBMS_OUTPUT.PUT_LINE('Триггер начал выполнение');
+--
+--   EXECUTE IMMEDIATE 'CREATE USER ' || :NEW.USERNAME ||
+--                     ' IDENTIFIED BY ' || :NEW.USERNAME ||
+--                     ' DEFAULT TABLESPACE HOTEL_TS' ||
+--                     ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+--
+--   DBMS_OUTPUT.PUT_LINE('CREATE USER выполнен успешно');
+--
+--   EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || :NEW.USERNAME;
+--   DBMS_OUTPUT.PUT_LINE('GRANT выполнен успешно');
 
-  EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || :NEW.USERNAME;
 EXCEPTION
   WHEN OTHERS THEN
-    DBMS_OUTPUT.PUT_LINE('Произошла ошибка при добавлении сотредника: ' || SQLERRM);
+    DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END CREATE_EMPLOYEE_USER_TRIGGER;
 /
+
 
 ----------------------------------------------------------------
 CREATE OR REPLACE TRIGGER DROP_EMPLOYEE_USER_TRIGGER
@@ -62,6 +71,8 @@ EXCEPTION
     DBMS_OUTPUT.PUT_LINE('Произошла ошибка при удалении сотрудника: ' || SQLERRM);
 END DROP_EMPLOYEE_USER_TRIGGER;
 /
+
+drop trigger DROP_EMPLOYEE_USER_TRIGGER;
 -----------------------------------------------------------------
 
 CREATE OR REPLACE TRIGGER DROP_GUEST_USER_TRIGGER
