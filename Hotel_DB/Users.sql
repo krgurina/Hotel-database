@@ -20,11 +20,17 @@ CREATE ROLE Guest_role;
 GRANT create session to Guest_role ;
 GRANT EXECUTE ON ADMIN.UserPack TO Guest_role;
 GRANT SELECT ON booking_details_view TO Guest_role;
+GRANT READ ON DIRECTORY MEDIA_DIR TO Guest_role;
 
 
 ----------------------------------------------------------------
 create USER Hotel_admin identified by 123;
 grant Hotel_admin_role to Hotel_admin;
+GRANT READ, WRITE ON DIRECTORY MEDIA_DIR TO Hotel_admin;
+
+
+
+
 
 create USER Guest identified by 123;
 grant Guest_role to Guest;

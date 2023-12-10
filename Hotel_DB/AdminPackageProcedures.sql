@@ -65,22 +65,22 @@ PROCEDURE UpdateEmployee(
         p_daily_price FLOAT,
         p_employee_id NUMBER);
     PROCEDURE UpdateServiceType(
-    p_service_type_id NUMBER,
-    p_name NVARCHAR2 DEFAULT NULL,
-    p_description NVARCHAR2 DEFAULT NULL,
-    p_daily_price FLOAT DEFAULT NULL,
-    p_employee_id NUMBER DEFAULT NULL);
+        p_service_type_id NUMBER,
+        p_name NVARCHAR2 DEFAULT NULL,
+        p_description NVARCHAR2 DEFAULT NULL,
+        p_daily_price FLOAT DEFAULT NULL,
+        p_employee_id NUMBER DEFAULT NULL);
     PROCEDURE DeleteServiceType(p_service_type_id NUMBER);
 
     --6. фото
     PROCEDURE InsertPhoto(
         p_photo_room_type_id NUMBER,
         p_photo_source VARCHAR2);
-PROCEDURE UpdatePhoto(
-    p_photo_id NUMBER,
-    p_photo_room_type_id NUMBER,
-    p_photo_source VARCHAR2
-);
+    PROCEDURE UpdatePhoto(
+        p_photo_id NUMBER,
+        p_room_type_id NUMBER,
+        p_photo_source VARCHAR2
+    );
     PROCEDURE DeletePhoto(p_photo_id NUMBER);
 
     --7. комната
@@ -89,40 +89,40 @@ PROCEDURE UpdatePhoto(
         p_room_number NVARCHAR2);
     PROCEDURE UpdateRoom(
         p_room_id NUMBER,
-    p_room_room_type_id NUMBER DEFAULT NULL,
-    p_room_number NVARCHAR2 DEFAULT NULL);
+        p_room_room_type_id NUMBER DEFAULT NULL,
+        p_room_number NVARCHAR2 DEFAULT NULL);
     PROCEDURE DeleteRoom(p_room_id NUMBER);
 
     --8. сервис
-PROCEDURE InsertService(
-    p_service_type_id NUMBER,
-    p_service_guest_id NUMBER,
-    p_service_start_date DATE,
-    p_service_end_date DATE);
+    PROCEDURE InsertService(
+        p_service_type_id NUMBER,
+        p_service_guest_id NUMBER,
+        p_service_start_date DATE,
+        p_service_end_date DATE);
     PROCEDURE UpdateService(
-    p_service_id NUMBER,
-    p_service_type_id NUMBER DEFAULT NULL,
-    p_service_guest_id NUMBER DEFAULT NULL,
-    p_service_start_date DATE DEFAULT NULL,
-    p_service_end_date DATE DEFAULT NULL);
-PROCEDURE DeleteService(p_service_id NUMBER);
+        p_service_id NUMBER,
+        p_service_type_id NUMBER DEFAULT NULL,
+        p_service_guest_id NUMBER DEFAULT NULL,
+        p_service_start_date DATE DEFAULT NULL,
+        p_service_end_date DATE DEFAULT NULL);
+    PROCEDURE DeleteService(p_service_id NUMBER);
 
     --9. бронь
     PROCEDURE InsertBooking(
-        p_booking_room_id NUMBER,
-        p_booking_guest_id NUMBER,
-        p_booking_start_date DATE,
-        p_booking_end_date DATE,
-        p_booking_tariff_id NUMBER,
-        p_booking_state NUMBER DEFAULT 1);
+        p_room_id NUMBER,
+        p_guest_id NUMBER,
+        p_start_date DATE,
+        p_end_date DATE,
+        p_tariff_id NUMBER,
+        p_booking_state NUMBER DEFAULT 2);
     PROCEDURE UpdateBooking(
-        p_booking_id NUMBER,
-        p_booking_room_id NUMBER,
-        p_booking_guest_id NUMBER,
-        p_booking_start_date DATE,
-        p_booking_end_date DATE,
-        p_booking_tariff_id NUMBER,
-        p_booking_state NUMBER);
+    p_booking_id NUMBER,
+    p_room_id NUMBER DEFAULT NULL,
+    p_guest_id NUMBER DEFAULT NULL,
+    p_start_date DATE DEFAULT NULL,
+    p_end_date DATE DEFAULT NULL,
+    p_tariff_id NUMBER DEFAULT NULL,
+    p_booking_state NUMBER DEFAULT NULL);
 
     PROCEDURE DeleteBooking(p_booking_id NUMBER);
 
@@ -753,16 +753,67 @@ END DeleteServiceType;
 -- END InsertPhoto;
 
 
---------
-  PROCEDURE InsertPhoto(
+-------- оно работает но написано слишком сложно
+--   PROCEDURE InsertPhoto(
+--     p_photo_room_type_id NUMBER,
+--     p_photo_source VARCHAR2
+--   ) AS
+--     v_blob BLOB;
+--     v_room_type_count NUMBER;
+--     v_photo_id NUMBER;
+--   BEGIN
+--     -- Проверка существования типа комнаты
+--     SELECT COUNT(*) INTO v_room_type_count
+--     FROM ROOM_TYPES
+--     WHERE room_type_id = p_photo_room_type_id;
+--
+--     IF v_room_type_count = 0 THEN
+--       RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
+--     END IF;
+--
+--     -- Извлечение содержимого файла изображения и запись в BLOB
+--     DBMS_LOB.createtemporary(v_blob, TRUE);
+--
+--     DECLARE
+--       v_file BFILE := BFILENAME('MEDIA_DIR', p_photo_source);
+--     BEGIN
+--       DBMS_LOB.fileopen(v_file, DBMS_LOB.file_readonly);
+--       DBMS_LOB.loadfromfile(v_blob, v_file, DBMS_LOB.getlength(v_file));
+--       DBMS_LOB.fileclose(v_file);
+--     EXCEPTION
+--       WHEN OTHERS THEN
+--         DBMS_OUTPUT.PUT_LINE('Ошибка при загрузке изображения: ' || SQLERRM);
+--         DBMS_LOB.fileclose(v_file);
+--         DBMS_LOB.freetemporary(v_blob);
+--         RETURN;
+--     END;
+--
+--     -- Вставка записи в таблицу PHOTO
+--     INSERT INTO PHOTO (photo_room_type_id, photo_source)
+--     VALUES (p_photo_room_type_id, v_blob) returning photo_id into v_photo_id;
+--
+--     COMMIT;
+--
+--     DBMS_OUTPUT.PUT_LINE('Фото успешно добавлено. ID: ' || v_photo_id);
+--
+--   EXCEPTION
+--     WHEN OTHERS THEN
+--       DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+--       ROLLBACK;
+--   END InsertPhoto;
+
+
+
+
+
+PROCEDURE InsertPhoto(
     p_photo_room_type_id NUMBER,
-    p_photo_source VARCHAR2
-  ) AS
-    v_blob BLOB;
+     p_photo_source VARCHAR2
+) AS
     v_room_type_count NUMBER;
     v_photo_id NUMBER;
-  BEGIN
-    -- Проверка существования типа комнаты
+BEGIN
+    --Проверка существования типа комнаты
     SELECT COUNT(*) INTO v_room_type_count
     FROM ROOM_TYPES
     WHERE room_type_id = p_photo_room_type_id;
@@ -771,98 +822,57 @@ END DeleteServiceType;
       RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
     END IF;
 
-    -- Извлечение содержимого файла изображения и запись в BLOB
-    DBMS_LOB.createtemporary(v_blob, TRUE);
-
-    DECLARE
-      v_file BFILE := BFILENAME('MEDIA_DIR', p_photo_source); -- Укажите путь к директории с изображениями
-    BEGIN
-      DBMS_LOB.fileopen(v_file, DBMS_LOB.file_readonly);
-      DBMS_LOB.loadfromfile(v_blob, v_file, DBMS_LOB.getlength(v_file));
-      DBMS_LOB.fileclose(v_file);
-    EXCEPTION
-      WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Ошибка при загрузке изображения: ' || SQLERRM);
-        DBMS_LOB.fileclose(v_file);
-        DBMS_LOB.freetemporary(v_blob);
-        RETURN;
-    END;
-
-    -- Вставка записи в таблицу PHOTO
     INSERT INTO PHOTO (photo_room_type_id, photo_source)
-    VALUES (p_photo_room_type_id, v_blob) returning photo_id into v_photo_id;
-
+    VALUES (p_photo_room_type_id, BFILENAME('MEDIA_DIR', p_photo_source)) returning photo_id into v_photo_id;
     COMMIT;
 
     DBMS_OUTPUT.PUT_LINE('Фото успешно добавлено. ID: ' || v_photo_id);
 
-  EXCEPTION
+EXCEPTION
     WHEN OTHERS THEN
-      DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
-      ROLLBACK;
-  END InsertPhoto;
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+END InsertPhoto;
+
+
+
 
 
 
 --изменить галерею фото
 PROCEDURE UpdatePhoto(
     p_photo_id NUMBER,
-    p_photo_room_type_id NUMBER,
+    p_room_type_id NUMBER,
     p_photo_source VARCHAR2
-)
-AS
-    v_existing_room_type_id NUMBER;
-    v_existing_photo_source BLOB;
+) AS
     v_room_type_count NUMBER;
     v_photo_count NUMBER;
-    v_blob BLOB;
+
 BEGIN
-    SELECT COUNT(*) INTO v_photo_count
-        FROM PHOTO WHERE photo_id = p_photo_id;
+    --Проверка существования фото
+        SELECT COUNT(*) INTO v_photo_count
+        FROM PHOTO
+        WHERE photo_id = p_photo_id;
 
-    IF v_photo_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Фото с указанным ID не найдено.');
+        IF v_photo_count = 0 THEN
+          RAISE_APPLICATION_ERROR(-20001, 'Фото с указанным ID не найдено.');
+        END IF;
+
+    --Проверка существования типа комнаты
+        SELECT COUNT(*) INTO v_room_type_count
+        FROM ROOM_TYPES
+        WHERE room_type_id = p_room_type_id;
+
+        IF v_room_type_count = 0 THEN
+          RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
     END IF;
 
-    -- Получение существующих данных
-    SELECT photo_room_type_id, photo_source
-    INTO v_existing_room_type_id, v_existing_photo_source
-    FROM PHOTO
-    WHERE photo_id = p_photo_id;
 
-    -- Проверка существования типа комнаты
-    SELECT COUNT(*) INTO v_room_type_count
-    FROM ROOM_TYPES
-    WHERE room_type_id = p_photo_room_type_id;
-
-    IF v_room_type_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
-    END IF;
-
-    -- Извлечение содержимого нового файла изображения и запись в BLOB
-    DBMS_LOB.createtemporary(v_blob, TRUE);
-
-    DECLARE
-        v_file BFILE := BFILENAME('MEDIA_DIR', p_photo_source);
-    BEGIN
-        DBMS_LOB.fileopen(v_file, DBMS_LOB.file_readonly);
-        DBMS_LOB.loadfromfile(v_blob, v_file, DBMS_LOB.getlength(v_file));
-        DBMS_LOB.fileclose(v_file);
-    EXCEPTION
-        WHEN OTHERS THEN
-            DBMS_OUTPUT.PUT_LINE('Ошибка при загрузке изображения: ' || SQLERRM);
-            DBMS_LOB.fileclose(v_file);
-            DBMS_LOB.freetemporary(v_blob);
-            RETURN;
-    END;
-
-    -- Обновление записи в таблице PHOTO
     UPDATE PHOTO
     SET
-        photo_room_type_id = CASE WHEN p_photo_room_type_id IS NOT NULL THEN p_photo_room_type_id ELSE v_existing_room_type_id END,
-        photo_source = CASE WHEN p_photo_source IS NOT NULL THEN v_blob ELSE v_existing_photo_source END
+        photo_room_type_id = p_room_type_id,
+        photo_source = BFILENAME('MEDIA_DIR', p_photo_source)
     WHERE photo_id = p_photo_id;
-
     COMMIT;
 
     DBMS_OUTPUT.PUT_LINE('Фото успешно обновлено. ID: ' || p_photo_id);
@@ -875,9 +885,62 @@ END UpdatePhoto;
 
 
 
-
-
-
+-- PROCEDURE UpdatePhoto(
+--     p_photo_id NUMBER,
+--     p_room_type_id NUMBER DEFAULT NULL,
+--     p_photo_source VARCHAR2 DEFAULT NULL
+-- ) AS
+--     v_room_type_count NUMBER;
+--     v_photo_count NUMBER;
+--     v_existing_room_type NUMBER;
+--     --v_existing_photo PHOTO%ROWTYPE;
+--     --v_photo BLOB;
+-- BEGIN
+--     -- Проверка существования фото
+--         SELECT COUNT(*) INTO v_photo_count
+--         FROM PHOTO
+--         WHERE photo_id = p_photo_id;
+--
+--         IF v_room_type_count = 0 THEN
+--           DBMS_OUTPUT.PUT_LINE('Тип комнаты с указанным ID не найден.');
+--         END IF;
+--
+--
+--     SELECT p_room_type_id INTO v_existing_room_type
+--     FROM PHOTO
+--     WHERE photo_id = p_photo_id;
+--
+--     IF p_photo_source IS NULL THEN
+--        RAISE_APPLICATION_ERROR(-2000, 'Имя фото обязательно должно быть задано.');
+--     END IF;
+--
+--     -- Проверка существования типа комнаты
+--     IF p_room_type_id IS NOT NULL THEN
+--         SELECT COUNT(*) INTO v_room_type_count
+--         FROM ROOM_TYPES
+--         WHERE room_type_id = p_room_type_id;
+--
+--         IF v_room_type_count = 0 THEN
+--           DBMS_OUTPUT.PUT_LINE('Тип комнаты с указанным ID не найден.');
+--         END IF;
+--     END IF;
+--
+--
+--     -- Обновление фото
+--     UPDATE PHOTO
+--     SET
+--         photo_room_type_id = COALESCE(p_room_type_id, v_existing_room_type),
+--         photo_source = BFILENAME('MEDIA_DIR', p_photo_source)
+--     WHERE photo_id = p_photo_id;
+--     COMMIT;
+--
+--     DBMS_OUTPUT.PUT_LINE('Фото успешно обновлено. ID: ' || p_photo_id);
+--
+-- EXCEPTION
+--     WHEN OTHERS THEN
+--         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+--         ROLLBACK;
+-- END UpdatePhoto;
 
 
 --удалить галерею фото
@@ -1185,42 +1248,61 @@ END DeleteService;
 -- ****************************************************************
 --создать бронь
 PROCEDURE InsertBooking(
-    p_booking_room_id NUMBER,
-    p_booking_guest_id NUMBER,
-    p_booking_start_date DATE,
-    p_booking_end_date DATE,
-    p_booking_tariff_id NUMBER,
-    p_booking_state NUMBER DEFAULT 1)
+    p_room_id NUMBER,
+    p_guest_id NUMBER,
+    p_start_date DATE,
+    p_end_date DATE,
+    p_tariff_id NUMBER,
+    p_booking_state NUMBER DEFAULT 2
+    )
 AS
-    v_room_count NUMBER;
-    v_guest_count NUMBER;
-    v_tariff_count NUMBER;
-
+    v_current_date DATE := SYSDATE;
+    v_guest_exists NUMBER;
+    v_room_exists NUMBER;
+    v_room_available NUMBER;
+    v_tariff_exists NUMBER;
 BEGIN
-    SELECT COUNT(*) INTO v_room_count
-        FROM ROOMS
-        WHERE room_id = p_booking_room_id;
-    IF v_room_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдено.');
-    END IF;
 
-    SELECT COUNT(*) INTO v_guest_count
-        FROM GUESTS
-        WHERE guest_id = p_booking_guest_id;
-    IF v_guest_count = 0 THEN
+    -- существования гостя
+    SELECT COUNT(*) INTO v_guest_exists FROM GUESTS
+    WHERE GUEST_ID = p_guest_id;
+    IF v_guest_exists = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
     END IF;
 
-    SELECT COUNT(*) INTO v_tariff_count
-        FROM TARIFF_TYPES
-        WHERE TARIFF_TYPE_ID = p_booking_tariff_id;
-    IF v_tariff_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Тариф с указанным ID не найдено.');
+    SELECT COUNT(*) INTO v_room_exists FROM ROOMS
+    WHERE room_id = p_room_id;
+    IF v_room_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Номер с указанным ID не найден.');
     END IF;
 
+    SELECT COUNT(*) INTO v_tariff_exists FROM TARIFF_TYPES
+    WHERE TARIFF_TYPE_ID = p_tariff_id;
+    IF v_tariff_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Тариф с указанным ID не найден.');
+    END IF;
 
-    IF p_booking_start_date >= p_booking_end_date THEN
-        RAISE_APPLICATION_ERROR(-20004, 'Дата начала бронирования должна быть меньше даты окончания.');
+    -- номер доступен в выбранные даты
+    SELECT COUNT(*) INTO v_room_available
+    FROM BOOKING
+    WHERE booking_room_id = p_room_id
+        AND (
+            (p_start_date BETWEEN booking_start_date AND booking_end_date)
+            OR (p_end_date BETWEEN booking_start_date AND booking_end_date)
+            OR (booking_start_date BETWEEN p_start_date AND p_end_date)
+            OR (booking_end_date BETWEEN p_start_date AND p_end_date)
+        );
+
+    IF v_room_available > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Номер занят в выбранные даты.');
+    END IF;
+
+    IF p_start_date >= p_end_date THEN
+        RAISE_APPLICATION_ERROR(-20003, 'Дата начала бронирования должна быть раньше даты окончания.');
+    END IF;
+
+    IF p_start_date < v_current_date OR p_end_date < v_current_date THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Выберите даты бронирования, начиная с текущей даты.');
     END IF;
 
     INSERT INTO BOOKING (
@@ -1231,37 +1313,35 @@ BEGIN
                          booking_tariff_id,
                          booking_state)
     VALUES (
-            p_booking_room_id,
-            p_booking_guest_id,
-            p_booking_start_date,
-            p_booking_end_date,
-            p_booking_tariff_id,
+            p_room_id,
+            p_guest_id,
+            p_start_date,
+            p_end_date,
+            p_tariff_id,
             p_booking_state);
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Бронь успешно добавлена.');
-
+    DBMS_OUTPUT.PUT_LINE('Бронирование успешно добавлено.');
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
 END InsertBooking;
 
-
 --изменить бронь
 PROCEDURE UpdateBooking(
     p_booking_id NUMBER,
-    p_booking_room_id NUMBER,
-    p_booking_guest_id NUMBER,
-    p_booking_start_date DATE,
-    p_booking_end_date DATE,
-    p_booking_tariff_id NUMBER,
-    p_booking_state NUMBER)
+    p_room_id NUMBER DEFAULT NULL,
+    p_guest_id NUMBER DEFAULT NULL,
+    p_start_date DATE DEFAULT NULL,
+    p_end_date DATE DEFAULT NULL,
+    p_tariff_id NUMBER DEFAULT NULL,
+    p_booking_state NUMBER DEFAULT NULL)
 AS
-    v_guest_count NUMBER;
-    v_room_count NUMBER;
-    v_tariff_count NUMBER;
+    v_old_booking BOOKING%ROWTYPE;
     v_booking_count NUMBER;
-
+    v_room_count NUMBER;
+    v_guest_count NUMBER;
+    v_tariff_count NUMBER;
 BEGIN
     SELECT COUNT(*) INTO v_booking_count
         FROM BOOKING
@@ -1270,48 +1350,124 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID не найдена.');
     END IF;
 
-    SELECT COUNT(*) INTO v_room_count
-        FROM ROOMS
-        WHERE room_id = p_booking_room_id;
-    IF v_room_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдено.');
+    IF p_room_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_room_count
+                FROM ROOMS
+                WHERE room_id = p_room_id;
+            IF v_room_count = 0 THEN
+                RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдена.');
+            END IF;
     END IF;
 
-    SELECT COUNT(*) INTO v_guest_count
-        FROM GUESTS
-        WHERE guest_id = p_booking_guest_id;
-    IF v_guest_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+    IF p_guest_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_guest_count
+                FROM GUESTS
+                WHERE guest_id = p_guest_id;
+            IF v_guest_count = 0 THEN
+                RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+            END IF;
     END IF;
 
-     SELECT COUNT(*) INTO v_tariff_count
-        FROM TARIFF_TYPES
-        WHERE TARIFF_TYPE_ID = p_booking_tariff_id;
-    IF v_tariff_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Тариф с указанным ID не найдено.');
+
+    IF p_tariff_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO v_tariff_count
+                FROM TARIFF_TYPES
+                WHERE tariff_type_id = p_tariff_id;
+            IF v_tariff_count = 0 THEN
+                RAISE_APPLICATION_ERROR(-20001, 'Тариф с указанным ID не найден.');
+            END IF;
     END IF;
 
-    IF p_booking_start_date >= p_booking_end_date THEN
-        RAISE_APPLICATION_ERROR(-20005, 'Дата начала бронирования должна быть меньше даты окончания.');
-    END IF;
+
+
+    -- Получаем старые данные брони
+    SELECT * INTO v_old_booking
+    FROM BOOKING WHERE booking_id = p_booking_id;
 
     UPDATE BOOKING
     SET
-        booking_room_id = p_booking_room_id,
-        booking_guest_id = p_booking_guest_id,
-        booking_start_date = p_booking_start_date,
-        booking_end_date = p_booking_end_date,
-        booking_tariff_id = p_booking_tariff_id,
-        booking_state = p_booking_state
+        booking_room_id = COALESCE(p_room_id, v_old_booking.BOOKING_ROOM_ID),
+        booking_guest_id = COALESCE(p_guest_id, v_old_booking.BOOKING_GUEST_ID),
+        booking_start_date = COALESCE(p_start_date, v_old_booking.BOOKING_START_DATE),
+        booking_end_date = COALESCE(p_end_date, v_old_booking.BOOKING_END_DATE),
+        booking_tariff_id = COALESCE(p_tariff_id, v_old_booking.BOOKING_TARIFF_ID),
+        booking_state = COALESCE(p_booking_state, v_old_booking.BOOKING_STATE)
     WHERE booking_id = p_booking_id;
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Бронь успешно обновлена.');
 
+    DBMS_OUTPUT.PUT_LINE('Бронирование с ID '|| p_booking_id ||' успешно обновлено.');
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
 END UpdateBooking;
+
+
+
+-- PROCEDURE UpdateBooking(
+--     p_booking_id NUMBER,
+--     p_booking_room_id NUMBER,
+--     p_booking_guest_id NUMBER,
+--     p_booking_start_date DATE,
+--     p_booking_end_date DATE,
+--     p_booking_tariff_id NUMBER,
+--     p_booking_state NUMBER)
+-- AS
+--     v_guest_count NUMBER;
+--     v_room_count NUMBER;
+--     v_tariff_count NUMBER;
+--     v_booking_count NUMBER;
+--
+-- BEGIN
+--     SELECT COUNT(*) INTO v_booking_count
+--         FROM BOOKING
+--         WHERE BOOKING_ID = p_booking_id;
+--     IF v_booking_count = 0 THEN
+--         RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID не найдена.');
+--     END IF;
+--
+--     SELECT COUNT(*) INTO v_room_count
+--         FROM ROOMS
+--         WHERE room_id = p_booking_room_id;
+--     IF v_room_count = 0 THEN
+--         RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдено.');
+--     END IF;
+--
+--     SELECT COUNT(*) INTO v_guest_count
+--         FROM GUESTS
+--         WHERE guest_id = p_booking_guest_id;
+--     IF v_guest_count = 0 THEN
+--         RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+--     END IF;
+--
+--      SELECT COUNT(*) INTO v_tariff_count
+--         FROM TARIFF_TYPES
+--         WHERE TARIFF_TYPE_ID = p_booking_tariff_id;
+--     IF v_tariff_count = 0 THEN
+--         RAISE_APPLICATION_ERROR(-20001, 'Тариф с указанным ID не найдено.');
+--     END IF;
+--
+--     IF p_booking_start_date >= p_booking_end_date THEN
+--         RAISE_APPLICATION_ERROR(-20005, 'Дата начала бронирования должна быть меньше даты окончания.');
+--     END IF;
+--
+--     UPDATE BOOKING
+--     SET
+--         booking_room_id = p_booking_room_id,
+--         booking_guest_id = p_booking_guest_id,
+--         booking_start_date = p_booking_start_date,
+--         booking_end_date = p_booking_end_date,
+--         booking_tariff_id = p_booking_tariff_id,
+--         booking_state = p_booking_state
+--     WHERE booking_id = p_booking_id;
+--     COMMIT;
+--     DBMS_OUTPUT.PUT_LINE('Бронь успешно обновлена.');
+--
+-- EXCEPTION
+--     WHEN OTHERS THEN
+--         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+--         ROLLBACK;
+-- END UpdateBooking;
 
 
 --удалить бронь

@@ -87,7 +87,7 @@ END;
 BEGIN
     ADMIN.HotelAdminPack.UpdateEmployee(
         p_employee_id =>2,
-        p_employe_ename => 'Виктория',
+        p_employee_name => 'Виктория',
         p_employee_surname => 'Юркевич',
         p_employee_position => 'бармен',
         p_employee_birth_date => TO_DATE('2000-08-17', 'YYYY-MM-DD')
@@ -260,7 +260,7 @@ create directory MEDIA_DIR as 'E:\CourseProj\photo';
 
 begin
     ADMIN.HotelAdminPack.InsertPhoto(
-        p_photo_room_type_id => 3,
+        p_photo_room_type_id => 1,
         p_photo_source => 'ph1.jpg'
     );
 end;
@@ -268,32 +268,27 @@ end;
 select PHOTO_SOURCE from Photo where photo_id=1;
 
 ----------------------------------------------------------------
---6.2 UpdatePhoto
+--6.2 UpdatePhoto   // не работает
 ----------------------------------------------------------------
 select * from Photo;
 
 begin
     ADMIN.HotelAdminPack.UpdatePhoto(
     p_photo_id=> 2,
-    p_photo_room_type_id =>2,
-    p_photo_source =>'ph2.jpg'
+    p_room_type_id =>1,
+    p_photo_source =>'ph22.jpg'
     );
 end;
 
-begin
-    ADMIN.HotelAdminPack.UpdatePhoto(
-    p_photo_id=> 1,
-    p_photo_room_type_id =>2,
-    p_photo_source =>'ph2.jpg'
-    );
-end;
 
 ----------------------------------------------------------------
 --6.3 DeletePhoto
 ----------------------------------------------------------------
-
-
-
+begin
+    ADMIN.HotelAdminPack.DeletePhoto(
+    p_photo_id=> 1
+    );
+end;
 
 
 ----------------------------------------------------------------
@@ -375,3 +370,58 @@ end;
 ----------------------------------------------------------------
 --8.3 DeleteRoom
 ----------------------------------------------------------------
+begin
+    Admin.HotelAdminPack.DeleteRoom(
+        p_room_id       => 1
+        );
+end;
+/
+
+----------------------------------------------------------------
+--9.1 InsertBooking
+----------------------------------------------------------------
+BEGIN
+    Admin.HotelAdminPack.InsertBooking(
+        p_room_id => 3,
+        p_guest_id => 86,
+        p_start_date => TO_DATE('2024-12-01', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2024-12-10', 'YYYY-MM-DD'),
+        p_tariff_id => 1,
+        p_booking_state => 3
+    );
+END;
+
+
+----------------------------------------------------------------
+--9.2 UpdateBooking
+----------------------------------------------------------------
+--1
+BEGIN
+    Admin.HotelAdminPack.UpdateBooking(
+        p_booking_id =>21,
+        p_room_id => 3,
+        p_guest_id => 86,
+        p_start_date => TO_DATE('2024-12-01', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2024-12-10', 'YYYY-MM-DD'),
+        p_tariff_id => 1,
+        p_booking_state => 3
+    );
+END;
+
+--2
+BEGIN
+    Admin.HotelAdminPack.UpdateBooking(
+        p_booking_id =>21,
+        p_start_date => TO_DATE('2024-12-01', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2024-12-12', 'YYYY-MM-DD'),
+        p_tariff_id => 2
+    );
+END;
+----------------------------------------------------------------
+--9.3 Delete
+----------------------------------------------------------------
+BEGIN
+    Admin.HotelAdminPack.DeleteBooking(
+        p_booking_id =>21
+    );
+END;
