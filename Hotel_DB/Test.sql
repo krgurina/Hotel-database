@@ -1,3 +1,7 @@
+select * from all_users;
+    DELETE FROM USERS WHERE lower(username) = lower(user2);
+
+
 --1.
 BEGIN
     ADMIN.HotelAdminPackageCRUD.InsertEmployee(
@@ -199,4 +203,50 @@ END GetPhotos;
 /
 
 select * from GetPhotos(1);
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION GetAllEmployeesCursor(p_employee_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR IS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    IF p_employee_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM Employees WHERE Employee_ID = p_employee_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM Employees;
+    END IF;
+
+    RETURN result_cursor;
+END GetAllEmployeesCursor;
+/
+
+CREATE OR REPLACE PROCEDURE GetAllEmployees(p_employee_id NUMBER DEFAULT NULL) AS
+    v_employee_cursor SYS_REFCURSOR;
+    v_employee_info EMPLOYEES%ROWTYPE;
+BEGIN
+    v_employee_cursor := GetAllEmployeesCursor(p_employee_id);
+
+    LOOP
+        FETCH v_employee_cursor INTO v_employee_info;
+        EXIT WHEN v_employee_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID сотрудника: ' || v_employee_info.EMPLOYEE_ID ||
+                             ', Имя: ' || v_employee_info.EMPLOYEE_NAME ||
+                             ', Фамилия: ' || v_employee_info.EMPLOYEE_SURNAME ||
+                             ', Должность: ' || v_employee_info.EMPLOYEE_POSITION ||
+                             ', Email: ' || v_employee_info.EMPLOYEE_EMAIL ||
+                             ', Дата найма: ' || v_employee_info.EMPLOYEE_HIRE_DATE ||
+                             ', Дата рождения: ' || v_employee_info.EMPLOYEE_BIRTH_DATE);
+    END LOOP;
+
+    CLOSE v_employee_cursor;
+END GetAllEmployees;
+/
+
+begin
+    GetAllEmployees;
+end;
+
 

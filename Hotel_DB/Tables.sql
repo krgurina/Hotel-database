@@ -1,6 +1,4 @@
-ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
 
-----------------------------------------------------------------
 CREATE TABLESPACE HOTEL_TS
 DATAFILE 'hotel_ts.dbf' SIZE 200M
 AUTOEXTEND ON NEXT 20M MAXSIZE UNLIMITED

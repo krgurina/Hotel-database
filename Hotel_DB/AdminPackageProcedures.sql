@@ -116,30 +116,40 @@ PROCEDURE UpdateEmployee(
         p_tariff_id NUMBER,
         p_booking_state NUMBER DEFAULT 2);
     PROCEDURE UpdateBooking(
-    p_booking_id NUMBER,
-    p_room_id NUMBER DEFAULT NULL,
-    p_guest_id NUMBER DEFAULT NULL,
-    p_start_date DATE DEFAULT NULL,
-    p_end_date DATE DEFAULT NULL,
-    p_tariff_id NUMBER DEFAULT NULL,
-    p_booking_state NUMBER DEFAULT NULL);
+        p_booking_id NUMBER,
+        p_room_id NUMBER DEFAULT NULL,
+        p_guest_id NUMBER DEFAULT NULL,
+        p_start_date DATE DEFAULT NULL,
+        p_end_date DATE DEFAULT NULL,
+        p_tariff_id NUMBER DEFAULT NULL,
+        p_booking_state NUMBER DEFAULT NULL);
 
     PROCEDURE DeleteBooking(p_booking_id NUMBER);
     PROCEDURE DeleteGuestCompletely(p_guest_id NUMBER);
 
-    FUNCTION GetAllGuestsCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllEmployeesCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllBookingCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllBookingStateCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllPhotoCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllRoomTypeCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllRoomCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllServiceTypeCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllServiceCursor RETURN SYS_REFCURSOR;
-    FUNCTION GetAllTariffCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetGuestsCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetEmployeesCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetBookingCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetBookingStateCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetPhotoCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetRoomTypeCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetRoomCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetServiceTypeCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetServiceCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
+    FUNCTION GetTariffCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
 
 
-    PROCEDURE GetAllGuests;
+    PROCEDURE GetGuests (p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetEmployees(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetBookings(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetBookingStates(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetPhotos(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetServices(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetRoomTypes(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetRooms(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetServiceTypes(p_id NUMBER DEFAULT NULL);
+    PROCEDURE GetTariffTypes(p_id NUMBER DEFAULT NULL);
+
 
 END HotelAdminPack;
 /
@@ -274,6 +284,7 @@ END UpdateEmployee;
 PROCEDURE DeleteEmployee(p_employee_id NUMBER)
 AS
     v_employee_count NUMBER;
+    v_username NVARCHAR2(50);
 BEGIN
     SELECT COUNT(*) INTO v_employee_count
     FROM EMPLOYEES
@@ -283,8 +294,15 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'Работник с указанным ID не найден.');
     END IF;
 
+    SELECT username INTO v_username
+    FROM EMPLOYEES
+    WHERE employee_id = p_employee_id;
+
     DELETE FROM EMPLOYEES WHERE employee_id = p_employee_id;
     COMMIT;
+
+    EXECUTE IMMEDIATE 'DROP USER ' || v_username || ' CASCADE';
+    --DELETE FROM all_USERS WHERE lower(username) = lower(v_username);
 
     DBMS_OUTPUT.PUT_LINE('Работник успешно удален.');
 
@@ -385,6 +403,7 @@ END UpdateGuest;
 PROCEDURE DeleteGuest(p_guest_id NUMBER)
 AS
     v_guest_count NUMBER;
+    v_username VARCHAR2(50);
 BEGIN
     SELECT COUNT(*) INTO v_guest_count
     FROM GUESTS
@@ -394,9 +413,16 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
     END IF;
 
+    SELECT username INTO v_username
+    FROM GUESTS
+    WHERE GUEST_ID = p_guest_id;
+
     DELETE FROM GUESTS WHERE guest_id = p_guest_id;
     COMMIT;
+
+    EXECUTE IMMEDIATE 'DROP USER ' || v_username || ' CASCADE';
       DBMS_OUTPUT.PUT_LINE('Гость успешно удален.');
+
 
 EXCEPTION
     WHEN OTHERS THEN
@@ -1410,95 +1436,140 @@ END DeleteGuestCompletely;
 -- ****************************************************************
 -- Вывод всей информации
 -- ****************************************************************
-FUNCTION GetAllGuestsCursor RETURN SYS_REFCURSOR
+FUNCTION GetGuestsCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM GUESTS;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM GUESTS WHERE GUEST_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM GUESTS;
+    END IF;
     RETURN result_cursor;
-END GetAllGuestsCursor;
+END GetGuestsCursor;
 
-FUNCTION GetAllEmployeesCursor RETURN SYS_REFCURSOR
+FUNCTION GetEmployeesCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM Employees;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM EMPLOYEES WHERE EMPLOYEE_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM EMPLOYEES;
+    END IF;
     RETURN result_cursor;
-END GetAllEmployeesCursor;
+END GetEmployeesCursor;
 
-FUNCTION GetAllBookingCursor RETURN SYS_REFCURSOR
+FUNCTION GetBookingCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM BOOKING;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM BOOKING WHERE BOOKING_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM BOOKING;
+    END IF;
     RETURN result_cursor;
-END GetAllBookingCursor;
+END GetBookingCursor;
 
-FUNCTION GetAllBookingStateCursor RETURN SYS_REFCURSOR
+FUNCTION GetBookingStateCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM BOOKING_STATE;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM BOOKING_STATE WHERE BOOKING_STATE_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM BOOKING_STATE;
+    END IF;
     RETURN result_cursor;
-END GetAllBookingStateCursor;
+END GetBookingStateCursor;
 
-FUNCTION GetAllPhotoCursor RETURN SYS_REFCURSOR
+FUNCTION GetPhotoCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM PHOTO;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM PHOTO WHERE PHOTO_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM PHOTO;
+    END IF;
     RETURN result_cursor;
-END GetAllPhotoCursor;
+END GetPhotoCursor;
 
-FUNCTION GetAllRoomTypeCursor RETURN SYS_REFCURSOR
+FUNCTION GetRoomTypeCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM ROOM_TYPES;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM ROOM_TYPES WHERE ROOM_TYPE_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM ROOM_TYPES;
+    END IF;
     RETURN result_cursor;
-END GetAllRoomTypeCursor;
+END GetRoomTypeCursor;
 
-FUNCTION GetAllRoomCursor RETURN SYS_REFCURSOR
+FUNCTION GetRoomCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM ROOMS;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM ROOMS WHERE ROOM_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM ROOMS;
+    END IF;
     RETURN result_cursor;
-END GetAllRoomCursor;
+END GetRoomCursor;
 
-FUNCTION GetAllServiceTypeCursor RETURN SYS_REFCURSOR
+FUNCTION GetServiceTypeCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM SERVICE_TYPES;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM SERVICE_TYPES WHERE SERVICE_TYPE_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM SERVICE_TYPES;
+    END IF;
     RETURN result_cursor;
-END GetAllServiceTypeCursor;
+END GetServiceTypeCursor;
 
-FUNCTION GetAllServiceCursor RETURN SYS_REFCURSOR
+FUNCTION GetServiceCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
-    OPEN result_cursor FOR
-        SELECT * FROM SERVICES;
+    IF p_id IS NOT NULL THEN
+        OPEN result_cursor FOR
+            SELECT * FROM SERVICES WHERE SERVICE_ID = p_id;
+    ELSE
+        OPEN result_cursor FOR
+            SELECT * FROM SERVICES;
+    END IF;
     RETURN result_cursor;
-END GetAllServiceCursor;
+END GetServiceCursor;
 
-FUNCTION GetAllTariffCursor RETURN SYS_REFCURSOR
+FUNCTION GetTariffCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
     AS
     result_cursor SYS_REFCURSOR;
 BEGIN
     OPEN result_cursor FOR
         SELECT * FROM TARIFF_TYPES;
     RETURN result_cursor;
-END GetAllTariffCursor;
+END GetTariffCursor;
 
 
 
@@ -1506,26 +1577,214 @@ END GetAllTariffCursor;
 -- ****************************************************************
 -- Процедуры для вывода
 -- ****************************************************************
-PROCEDURE GetAllGuests
-AS
-    guest_cursor SYS_REFCURSOR;
-    v_guest_info GUESTS%ROWTYPE;
+PROCEDURE GetGuests(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info GUESTS%ROWTYPE;
 BEGIN
-    guest_cursor := GetAllGuestsCursor;
+    v_cursor := GetGuestsCursor(p_id);
 
     LOOP
-        FETCH guest_cursor INTO v_guest_info;
-        EXIT WHEN guest_cursor%NOTFOUND;
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
 
-        DBMS_OUTPUT.PUT_LINE('ID: ' || v_guest_info.GUEST_ID ||
-                             ', Email: ' || v_guest_info.GUEST_EMAIL ||
-                             ', Имя: ' || v_guest_info.GUEST_NAME ||
-                             ', Фамилия: ' || v_guest_info.GUEST_SURNAME ||
-                             ', Логин: ' || v_guest_info.USERNAME);
+        DBMS_OUTPUT.PUT_LINE('ID гостя: ' || v_info.GUEST_ID ||
+                             ', Email: ' || v_info.GUEST_EMAIL ||
+                             ', Имя: ' || v_info.GUEST_NAME ||
+                             ', Фамилия: ' || v_info.GUEST_SURNAME ||
+                             ', Имя пользователя: ' || v_info.USERNAME);
     END LOOP;
 
-    CLOSE guest_cursor;
-END GetAllGuests;
+    CLOSE v_cursor;
+END GetGuests;
+
+
+
+PROCEDURE GetEmployees(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info EMPLOYEES%ROWTYPE;
+BEGIN
+    v_cursor := GetEmployeesCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID сотрудника: ' || v_info.EMPLOYEE_ID ||
+                             ', Имя: ' || v_info.EMPLOYEE_NAME ||
+                             ', Фамилия: ' || v_info.EMPLOYEE_SURNAME ||
+                             ', Должность: ' || v_info.EMPLOYEE_POSITION ||
+                             ', Email: ' || v_info.EMPLOYEE_EMAIL ||
+                             ', Дата найма: ' || v_info.EMPLOYEE_HIRE_DATE ||
+                             ', Дата рождения: ' || v_info.EMPLOYEE_BIRTH_DATE);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetEmployees;
+
+
+PROCEDURE GetBookings(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_booking_info BOOKING%ROWTYPE;
+BEGIN
+    v_cursor := GetBookingCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_booking_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID брони: ' || v_booking_info.BOOKING_ID ||
+                             ', ID комнаты: ' || v_booking_info.BOOKING_ROOM_ID ||
+                             ', ID гостя: ' || v_booking_info.BOOKING_GUEST_ID ||
+                             ', Дата начала: ' || TO_CHAR(v_booking_info.BOOKING_START_DATE, 'DD.MM.YYYY') ||
+                             ', Дата окончания: ' || TO_CHAR(v_booking_info.BOOKING_END_DATE, 'DD.MM.YYYY') ||
+                             ', ID тарифа: ' || v_booking_info.BOOKING_TARIFF_ID ||
+                             ', Статус: ' || v_booking_info.BOOKING_STATE);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetBookings;
+
+PROCEDURE GetBookingStates(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_booking_state_info BOOKING_STATE%ROWTYPE;
+BEGIN
+    v_cursor := GetBookingStateCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_booking_state_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID статуса бронирования: ' || v_booking_state_info.BOOKING_STATE_ID ||
+                             ', Статус бронирования: ' || v_booking_state_info.BOOKING_STATE);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetBookingStates;
+
+
+PROCEDURE GetPhotos(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info PHOTO%ROWTYPE;
+BEGIN
+    v_cursor := GetPhotoCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID фотографии: ' || v_info.PHOTO_ID ||
+                             ', ID типа комнаты: ' || v_info.PHOTO_ROOM_TYPE_ID ||
+                             ', Источник фото: ' );--|| v_info.PHOTO_SOURCE
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetPhotos;
+
+
+PROCEDURE GetRoomTypes(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info ROOM_TYPES%ROWTYPE;
+BEGIN
+    v_cursor := GetRoomTypeCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID типа комнаты: ' || v_info.ROOM_TYPE_ID ||
+                             ', Название: ' || v_info.ROOM_TYPE_NAME ||
+                             ', Вместимость: ' || v_info.ROOM_TYPE_CAPACITY ||
+                             ', Суточная стоимость: ' || v_info.ROOM_TYPE_DAILY_PRICE ||
+                             ', Описание: ' || v_info.ROOM_TYPE_DESCRIPTION);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetRoomTypes;
+
+
+PROCEDURE GetRooms(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info ROOMS%ROWTYPE;
+BEGIN
+    v_cursor := GetRoomCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID комнаты: ' || v_info.ROOM_ID ||
+                             ', ID типа комнаты: ' || v_info.ROOM_ROOM_TYPE_ID ||
+                             ', Номер комнаты: ' || v_info.ROOM_NUMBER);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetRooms;
+
+
+PROCEDURE GetServiceTypes(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info SERVICE_TYPES%ROWTYPE;
+BEGIN
+    v_cursor := GetServiceTypeCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID типа услуги: ' || v_info.SERVICE_TYPE_ID ||
+                             ', Название: ' || v_info.SERVICE_TYPE_NAME ||
+                             ', Описание: ' || v_info.SERVICE_TYPE_DESCRIPTION ||
+                             ', Суточная стоимость: ' || v_info.SERVICE_TYPE_DAILY_PRICE ||
+                             ', ID сотрудника: ' || v_info.SERVICE_TYPE_EMPLOYEE_ID);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetServiceTypes;
+
+
+
+PROCEDURE GetServices(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info SERVICES%ROWTYPE;
+BEGIN
+    v_cursor := GetServiceCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID услуги: ' || v_info.SERVICE_ID ||
+                             ', ID типа услуги: ' || v_info.SERVICE_TYPE_ID ||
+                             ', ID гостя: ' || v_info.SERVICE_GUEST_ID ||
+                             ', Дата начала: ' || v_info.SERVICE_START_DATE ||
+                             ', Дата окончания: ' || v_info.SERVICE_END_DATE);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetServices;
+
+
+PROCEDURE GetTariffTypes(p_id NUMBER DEFAULT NULL) AS
+    v_cursor SYS_REFCURSOR;
+    v_info TARIFF_TYPES%ROWTYPE;
+BEGIN
+    v_cursor := GetTariffCursor(p_id);
+
+    LOOP
+        FETCH v_cursor INTO v_info;
+        EXIT WHEN v_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID типа тарифа: ' || v_info.TARIFF_TYPE_ID ||
+                             ', Название: ' || v_info.TARIFF_TYPE_NAME ||
+                             ', Описание: ' || v_info.TARIFF_TYPE_DESCRIPTION ||
+                             ', Суточная стоимость: ' || v_info.TARIFF_TYPE_DAILY_PRICE);
+    END LOOP;
+
+    CLOSE v_cursor;
+END GetTariffTypes;
+
+
+
 
 
 

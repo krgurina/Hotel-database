@@ -79,11 +79,11 @@ SELECT USER FROM DUAL;
 ----------------------------------------------------------------
 begin
     ADMIN.UserPack.DenyBooking(
-        p_booking_id => 1);
+        p_booking_id => 2);
 end;
 
 BEGIN
-    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 1);
+    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 2);
 END;
 /
 
@@ -120,3 +120,7 @@ BEGIN
     );
 END;
 /
+
+----------------------------------------------------------------
+-- DenyService
+----------------------------------------------------------------

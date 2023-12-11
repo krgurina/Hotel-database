@@ -321,11 +321,33 @@ PROCEDURE DenyBooking(
 )
 AS
     v_booking_exists NUMBER;
+    v_booking BOOKING%rowtype;
+    v_current_user VARCHAR2(30);
+    v_current_user_id NUMBER;
 BEGIN
+    v_current_user := USER;
+
+    SELECT GUEST_ID INTO v_current_user_id from GUESTS
+        where lower(USERNAME) = lower(v_current_user);
+
     SELECT COUNT(*) INTO v_booking_exists
     FROM BOOKING WHERE booking_id = p_booking_id;
     IF v_booking_exists = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID не найдена.');
+    END IF;
+
+    SELECT * INTO v_booking from BOOKING
+        WHERE booking_id =p_booking_id;
+
+--     SELECT BOOKING_GUEST_ID INTO v_booking_user
+--     FROM BOOKING WHERE booking_id = p_booking_id;
+
+    IF v_booking.BOOKING_GUEST_ID <> v_current_user_id THEN
+        RAISE_APPLICATION_ERROR(-20008, 'Вы можете отменить только свою бронь.');
+    END IF;
+
+    IF v_booking.BOOKING_STATE=3 then
+         RAISE_APPLICATION_ERROR(-20009, 'Бронь с ID ' || p_booking_id || ' Уже отменена.');
     END IF;
 
     UPDATE BOOKING
@@ -489,7 +511,58 @@ EXCEPTION
         ROLLBACK;
 END EditService;
 
+----------------------------------------------------------------
+PROCEDURE DenyService(p_service_id NUMBER)
+AS
+    v_service_count NUMBER;
+    v_existing_service SERVICES%ROWTYPE;
+    v_current_user VARCHAR2(30);
+    v_current_user_id NUMBER;
+BEGIN
+    v_current_user := USER;
 
+    SELECT COUNT(*) INTO v_service_count
+        FROM SERVICES
+        WHERE service_id = p_service_id;
+    IF v_service_count = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Услуга с указанным ID не найдено.');
+    END IF;
+
+    SELECT * INTO v_existing_service FROM SERVICES
+        WHERE service_id = p_service_id;
+
+
+    IF v_existing_service.SERVICE_GUEST_ID <> v_current_user_id THEN
+        RAISE_APPLICATION_ERROR(-20008, 'Вы можете отменить только заказанные вами услуги.');
+    END IF;
+
+    --IF v_existing_service.SERVICE_GUEST_ID = 2 THEN --ЕСЛИ СЕРВИС не ОТМЕНЕН
+        IF v_existing_service.SERVICE_START_DATE<SYSDATE and v_existing_service.SERVICE_END_DATE>=SYSDATE then
+
+            UPDATE SERVICES
+            SET SERVICE_END_DATE = SYSDATE
+            WHERE SERVICE_ID = p_service_id;
+            COMMIT;
+        end if;
+
+    IF v_existing_service.SERVICE_START_DATE<SYSDATE and v_existing_service.SERVICE_END_DATE<SYSDATE then
+        RAISE_APPLICATION_ERROR(-20009, 'Срок дейстивя услуги уже закончился, вы не можете её отменить.');
+    end if;
+
+    IF v_existing_service.SERVICE_START_DATE>SYSDATE and v_existing_service.SERVICE_END_DATE>SYSDATE then
+        DELETE FROM SERVICES WHERE service_id=p_service_id;
+        COMMIT;
+    end if;
+
+
+    --END IF;
+
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+END DenyService;
 
 
 

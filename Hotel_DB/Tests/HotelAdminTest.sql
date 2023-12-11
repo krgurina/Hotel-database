@@ -75,7 +75,7 @@ BEGIN
         p_email => 'example_manager@email.com',
         p_hire_date => TO_DATE('2023-01-01', 'YYYY-MM-DD'),
         p_birth_date => TO_DATE('2003-09-28', 'YYYY-MM-DD'),
-        p_username => 'employee14'
+        p_username => 'employee15'
     );
 
 END;
@@ -112,7 +112,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.DeleteEmployee(
-        p_employee_id =>42
+        p_employee_id =>61
     );
 END;
 /
@@ -429,8 +429,15 @@ END;
 ----------------------------------------------------------------
 -- 1
 begin
-    ADMIN.HotelAdminPack.GetAllGuests;
+    HOTEL_ADMIN.GetGuests;
 end;
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
+begin
+    HOTEL_ADMIN.GetEmployees;
+end;
+
+begin
+    ADMIN.HotelAdminPack.GetEmployees(1);
+end;
