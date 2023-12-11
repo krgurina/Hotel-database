@@ -118,12 +118,12 @@ SELECT * FROM SERVICE_TYPE_VIEW;
 DROP VIEW SERVICE_TYPE_VIEW;
 
 -------------------------SERVICE_VIEW-------------------------
-
-CREATE VIEW service_view
+--именно заказанные сервисы
+CREATE or replace VIEW service_view
 AS SELECT
     S.SERVICE_ID, S.SERVICE_START_DATE,s.SERVICE_END_DATE,
     ST.service_type_name, ST.service_type_daily_price, --service_type_table fields
-    G.GUEST_NAME, G.GUEST_SURNAME,
+    G.GUEST_NAME, G.GUEST_SURNAME, G.username,
     R.ROOM_NUMBER
 FROM SERVICE_TYPES ST
 INNER JOIN SERVICES S ON ST.service_type_id = S.SERVICE_ID

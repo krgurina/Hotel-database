@@ -125,8 +125,21 @@ PROCEDURE UpdateEmployee(
     p_booking_state NUMBER DEFAULT NULL);
 
     PROCEDURE DeleteBooking(p_booking_id NUMBER);
-
     PROCEDURE DeleteGuestCompletely(p_guest_id NUMBER);
+
+    FUNCTION GetAllGuestsCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllEmployeesCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllBookingCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllBookingStateCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllPhotoCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllRoomTypeCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllRoomCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllServiceTypeCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllServiceCursor RETURN SYS_REFCURSOR;
+    FUNCTION GetAllTariffCursor RETURN SYS_REFCURSOR;
+
+
+    PROCEDURE GetAllGuests;
 
 END HotelAdminPack;
 /
@@ -885,64 +898,6 @@ END UpdatePhoto;
 
 
 
--- PROCEDURE UpdatePhoto(
---     p_photo_id NUMBER,
---     p_room_type_id NUMBER DEFAULT NULL,
---     p_photo_source VARCHAR2 DEFAULT NULL
--- ) AS
---     v_room_type_count NUMBER;
---     v_photo_count NUMBER;
---     v_existing_room_type NUMBER;
---     --v_existing_photo PHOTO%ROWTYPE;
---     --v_photo BLOB;
--- BEGIN
---     -- Проверка существования фото
---         SELECT COUNT(*) INTO v_photo_count
---         FROM PHOTO
---         WHERE photo_id = p_photo_id;
---
---         IF v_room_type_count = 0 THEN
---           DBMS_OUTPUT.PUT_LINE('Тип комнаты с указанным ID не найден.');
---         END IF;
---
---
---     SELECT p_room_type_id INTO v_existing_room_type
---     FROM PHOTO
---     WHERE photo_id = p_photo_id;
---
---     IF p_photo_source IS NULL THEN
---        RAISE_APPLICATION_ERROR(-2000, 'Имя фото обязательно должно быть задано.');
---     END IF;
---
---     -- Проверка существования типа комнаты
---     IF p_room_type_id IS NOT NULL THEN
---         SELECT COUNT(*) INTO v_room_type_count
---         FROM ROOM_TYPES
---         WHERE room_type_id = p_room_type_id;
---
---         IF v_room_type_count = 0 THEN
---           DBMS_OUTPUT.PUT_LINE('Тип комнаты с указанным ID не найден.');
---         END IF;
---     END IF;
---
---
---     -- Обновление фото
---     UPDATE PHOTO
---     SET
---         photo_room_type_id = COALESCE(p_room_type_id, v_existing_room_type),
---         photo_source = BFILENAME('MEDIA_DIR', p_photo_source)
---     WHERE photo_id = p_photo_id;
---     COMMIT;
---
---     DBMS_OUTPUT.PUT_LINE('Фото успешно обновлено. ID: ' || p_photo_id);
---
--- EXCEPTION
---     WHEN OTHERS THEN
---         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
---         ROLLBACK;
--- END UpdatePhoto;
-
-
 --удалить галерею фото
 PROCEDURE DeletePhoto(p_photo_id NUMBER)
 AS
@@ -1403,73 +1358,6 @@ EXCEPTION
 END UpdateBooking;
 
 
-
--- PROCEDURE UpdateBooking(
---     p_booking_id NUMBER,
---     p_booking_room_id NUMBER,
---     p_booking_guest_id NUMBER,
---     p_booking_start_date DATE,
---     p_booking_end_date DATE,
---     p_booking_tariff_id NUMBER,
---     p_booking_state NUMBER)
--- AS
---     v_guest_count NUMBER;
---     v_room_count NUMBER;
---     v_tariff_count NUMBER;
---     v_booking_count NUMBER;
---
--- BEGIN
---     SELECT COUNT(*) INTO v_booking_count
---         FROM BOOKING
---         WHERE BOOKING_ID = p_booking_id;
---     IF v_booking_count = 0 THEN
---         RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID не найдена.');
---     END IF;
---
---     SELECT COUNT(*) INTO v_room_count
---         FROM ROOMS
---         WHERE room_id = p_booking_room_id;
---     IF v_room_count = 0 THEN
---         RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдено.');
---     END IF;
---
---     SELECT COUNT(*) INTO v_guest_count
---         FROM GUESTS
---         WHERE guest_id = p_booking_guest_id;
---     IF v_guest_count = 0 THEN
---         RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
---     END IF;
---
---      SELECT COUNT(*) INTO v_tariff_count
---         FROM TARIFF_TYPES
---         WHERE TARIFF_TYPE_ID = p_booking_tariff_id;
---     IF v_tariff_count = 0 THEN
---         RAISE_APPLICATION_ERROR(-20001, 'Тариф с указанным ID не найдено.');
---     END IF;
---
---     IF p_booking_start_date >= p_booking_end_date THEN
---         RAISE_APPLICATION_ERROR(-20005, 'Дата начала бронирования должна быть меньше даты окончания.');
---     END IF;
---
---     UPDATE BOOKING
---     SET
---         booking_room_id = p_booking_room_id,
---         booking_guest_id = p_booking_guest_id,
---         booking_start_date = p_booking_start_date,
---         booking_end_date = p_booking_end_date,
---         booking_tariff_id = p_booking_tariff_id,
---         booking_state = p_booking_state
---     WHERE booking_id = p_booking_id;
---     COMMIT;
---     DBMS_OUTPUT.PUT_LINE('Бронь успешно обновлена.');
---
--- EXCEPTION
---     WHEN OTHERS THEN
---         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
---         ROLLBACK;
--- END UpdateBooking;
-
-
 --удалить бронь
 PROCEDURE DeleteBooking(p_booking_id NUMBER)
 AS
@@ -1519,7 +1407,125 @@ EXCEPTION
 
 END DeleteGuestCompletely;
 
+-- ****************************************************************
+-- Вывод всей информации
+-- ****************************************************************
+FUNCTION GetAllGuestsCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM GUESTS;
+    RETURN result_cursor;
+END GetAllGuestsCursor;
 
+FUNCTION GetAllEmployeesCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM Employees;
+    RETURN result_cursor;
+END GetAllEmployeesCursor;
+
+FUNCTION GetAllBookingCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM BOOKING;
+    RETURN result_cursor;
+END GetAllBookingCursor;
+
+FUNCTION GetAllBookingStateCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM BOOKING_STATE;
+    RETURN result_cursor;
+END GetAllBookingStateCursor;
+
+FUNCTION GetAllPhotoCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM PHOTO;
+    RETURN result_cursor;
+END GetAllPhotoCursor;
+
+FUNCTION GetAllRoomTypeCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM ROOM_TYPES;
+    RETURN result_cursor;
+END GetAllRoomTypeCursor;
+
+FUNCTION GetAllRoomCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM ROOMS;
+    RETURN result_cursor;
+END GetAllRoomCursor;
+
+FUNCTION GetAllServiceTypeCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM SERVICE_TYPES;
+    RETURN result_cursor;
+END GetAllServiceTypeCursor;
+
+FUNCTION GetAllServiceCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM SERVICES;
+    RETURN result_cursor;
+END GetAllServiceCursor;
+
+FUNCTION GetAllTariffCursor RETURN SYS_REFCURSOR
+    AS
+    result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN result_cursor FOR
+        SELECT * FROM TARIFF_TYPES;
+    RETURN result_cursor;
+END GetAllTariffCursor;
+
+
+
+
+-- ****************************************************************
+-- Процедуры для вывода
+-- ****************************************************************
+PROCEDURE GetAllGuests
+AS
+    guest_cursor SYS_REFCURSOR;
+    v_guest_info GUESTS%ROWTYPE;
+BEGIN
+    guest_cursor := GetAllGuestsCursor;
+
+    LOOP
+        FETCH guest_cursor INTO v_guest_info;
+        EXIT WHEN guest_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('ID: ' || v_guest_info.GUEST_ID ||
+                             ', Email: ' || v_guest_info.GUEST_EMAIL ||
+                             ', Имя: ' || v_guest_info.GUEST_NAME ||
+                             ', Фамилия: ' || v_guest_info.GUEST_SURNAME ||
+                             ', Логин: ' || v_guest_info.USERNAME);
+    END LOOP;
+
+    CLOSE guest_cursor;
+END GetAllGuests;
 
 
 

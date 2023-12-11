@@ -90,3 +90,113 @@ END;
 /
 commit;
 select * from rooms;
+
+
+
+
+create or replace PROCEDURE Test1
+AS
+BEGIN
+    select USERNAME from GUESTS;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+
+END Test1;
+
+begin
+    Test1;
+end;
+
+
+
+CREATE OR REPLACE FUNCTION GetAllGuestsCursor RETURN SYS_REFCURSOR IS
+    v_result_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_result_cursor FOR
+        SELECT * FROM GUESTS;
+
+    RETURN v_result_cursor;
+END GetAllGuestsCursor;
+/
+
+drop FUNCTION GetAllGuests;
+
+CREATE OR REPLACE PROCEDURE GetAllGuests AS
+    guest_cursor SYS_REFCURSOR;
+    v_guest_info GUESTS%ROWTYPE;
+BEGIN
+    guest_cursor := GetAllGuestsCursor;
+
+    LOOP
+        FETCH guest_cursor INTO v_guest_info;
+        EXIT WHEN guest_cursor%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE('Guest ID: ' || v_guest_info.GUEST_ID ||
+                             ', Email: ' || v_guest_info.GUEST_EMAIL ||
+                             ', Name: ' || v_guest_info.GUEST_NAME ||
+                             ', Surname: ' || v_guest_info.GUEST_SURNAME ||
+                             ', Username: ' || v_guest_info.USERNAME);
+    END LOOP;
+
+    CLOSE guest_cursor;
+END GetAllGuests;
+/
+
+
+
+
+begin
+    ShowAllGuests;
+end;
+
+
+
+
+CREATE OR REPLACE FUNCTION GetPhoto(
+    p_room_type_id IN NUMBER
+) RETURN BLOB
+IS
+    v_photo BLOB;
+BEGIN
+    SELECT PHOTO_SOURCE INTO v_photo
+    FROM PHOTO
+    WHERE PHOTO_ROOM_TYPE_ID = p_room_type_id;
+    RETURN v_photo;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Данные не найдены');
+        RETURN NULL;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('OpenPoster: ' || SQLERRM);
+        RETURN NULL;
+END GetPhoto;
+
+    select GetPhoto(1) from dual;
+----------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION GetPhotos(
+    p_room_type_id IN NUMBER
+) RETURN PHOTO%ROWTYPE
+IS
+    v_photo PHOTO%ROWTYPE;
+BEGIN
+    SELECT *
+    INTO v_photo
+    FROM PHOTO
+    WHERE PHOTO_ID = p_room_type_id;
+
+    RETURN v_photo;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Фотографии не найдены');
+        RETURN NULL;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('GetPhotos: ' || SQLERRM);
+        RETURN NULL;
+END GetPhotos;
+/
+
+select * from GetPhotos(1);
+
