@@ -19,13 +19,16 @@ SELECT
     B.booking_id,
     B.booking_start_date,
     B.booking_end_date,
-    B.booking_state,
+    B.booking_state AS booking_state_id,
+    BS.BOOKING_STATE,
+    B.booking_guest_id,
     G.guest_name,
     G.guest_surname,
     R.room_number,
     RT.room_type_name,
     TT.tariff_type_name
-FROM BOOKING B
+FROM BOOKING_STATE BS
+JOIN BOOKING B ON BS.BOOKING_STATE_ID = B.BOOKING_STATE
 JOIN GUESTS G ON B.booking_guest_id = G.guest_id
 JOIN ROOMS R ON B.booking_room_id = R.room_id
 JOIN ROOM_TYPES RT ON R.room_room_type_id = RT.room_type_id
@@ -74,27 +77,15 @@ WHERE
 
 select * from OCCUPIED_ROOMS_VIEW;
 
---не создавать пока нет сервисов
-CREATE VIEW TotalRevenue AS
-SELECT
-    SUM(TT.tariff_type_daily_price * (B.booking_end_date - B.booking_start_date)) AS total_revenue
-FROM
-    BOOKING B
-JOIN
-    TARIFF_TYPES TT ON B.booking_tariff_id = TT.tariff_type_id;
+----------------------------------------------------------------
+-- вывод фото для типа команты
+----------------------------------------------------------------
+CREATE OR REPLACE VIEW GET_ROOM_PHOTO AS
+       SELECT P.PHOTO_ROOM_TYPE_ID, RT.ROOM_TYPE_NAME, P.PHOTO_SOURCE
+       FROM PHOTO P
+       JOIN ROOM_TYPES RT ON P.PHOTO_ROOM_TYPE_ID=RT.ROOM_TYPE_ID;
 
--------------------------PERSON_VIEW-------------------------
-
-
-
-
--------------------------STAFF_VIEW-------------------------
-
-
-
--------------------------GUEST_VIEW-------------------------
-
-
+SELECT * FROM GET_ROOM_PHOTO;
 
 -------------------------SERVICE_INFO_VIEW-------------------------
 

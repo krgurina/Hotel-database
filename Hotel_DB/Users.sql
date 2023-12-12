@@ -1,5 +1,5 @@
 select * from dba_users;
-
+----------------------------------------------------------------
 CREATE ROLE Hotel_admin_role;
 
 GRANT create session to Hotel_admin_role ;
@@ -22,6 +22,15 @@ GRANT EXECUTE ON ADMIN.UserPack TO Guest_role;
 GRANT SELECT ON booking_details_view TO Guest_role;
 GRANT READ ON DIRECTORY MEDIA_DIR TO Guest_role;
 
+
+CREATE PROFILE PF_USER LIMIT
+    PASSWORD_LIFE_TIME 180          -- количество дней жизни пароля
+    SESSIONS_PER_USER 3             -- количество сессий для пользователя
+    FAILED_LOGIN_ATTEMPTS 7         -- количество попыток входа
+    PASSWORD_LOCK_TIME 1            -- количество дней блокирования после ошибок
+    PASSWORD_REUSE_TIME 5          -- через сколько дней можно повторить пароль
+    CONNECT_TIME 180                -- время соединения, минут
+    IDLE_TIME 45;                   -- количество минут простоя
 
 ----------------------------------------------------------------
 create USER Hotel_admin identified by 123;

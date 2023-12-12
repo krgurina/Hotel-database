@@ -246,7 +246,30 @@ END GetAllEmployees;
 /
 
 begin
-    GetAllEmployees;
+    INSERT_BOOKING_STATE('fix');
 end;
+
+
+
+CREATE OR REPLACE PROCEDURE INSERT_BOOKING_STATE (
+    p_booking_state NVARCHAR2
+) AS
+BEGIN
+    -- Вставка данных в таблицу
+    INSERT INTO BOOKING_STATE (booking_state)
+    VALUES (p_booking_state);
+
+    -- Фиксация транзакции
+    COMMIT;
+
+    DBMS_OUTPUT.PUT_LINE('Вставка успешно завершена: ' || p_booking_state);
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Ошибка вставки: ' || SQLERRM);
+        -- Откат изменений в случае ошибки
+        ROLLBACK;
+END INSERT_BOOKING_STATE;
+/
+
 
 

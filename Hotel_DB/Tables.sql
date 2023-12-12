@@ -111,6 +111,8 @@ INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type
 INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Полу-пансион','2 приёма пищи, доступ к фитнес-залу',  35.50);
 INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Пансион','3 приёма пищи, доступ к фитнес-залу',  45.0);
 INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('Всё включено','неограниченное посещение ресторана, доступ к фитнес-залу, спа-услуги, выезд в любое время',  95.0);
+----------------------------------------------------------------
+INSERT INTO TARIFF_TYPES (tariff_type_name, tariff_type_description, tariff_type_daily_price) VALUES('FIX','FIX', 0);
 COMMIT;
 
 DROP TABLE TARIFF_TYPES ;
@@ -171,7 +173,11 @@ CREATE TABLE BOOKING_STATE (
 insert into BOOKING_STATE (booking_state)  values ('Забронировано гостем');
 insert into BOOKING_STATE (booking_state)  values ('Одобрено администратором');
 insert into BOOKING_STATE (booking_state)  values ('Отменено гостем');
+insert into BOOKING_STATE (booking_state)  values ('FIX');
 commit;
+
+
+
 
 select * from BOOKING_STATE;
 

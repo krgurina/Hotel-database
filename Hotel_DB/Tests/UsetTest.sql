@@ -2,33 +2,34 @@
 ----------------------------------------------------------------
 --PreBooking
 ----------------------------------------------------------------
-DECLARE
-    v_booking_id NUMBER;
+BEGIN
+    ADMIN.UserPack.PreBooking(
+        p_room_id => 4,
+        p_start_date => TO_DATE('2023-12-11', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2023-12-12', 'YYYY-MM-DD'),
+        p_tariff_id => 1
+    );
+END;
+/
+
 BEGIN
     ADMIN.UserPack.PreBooking(
         p_room_id => 2,
-        p_guest_id => 87,
         p_start_date => TO_DATE('2024-01-01', 'YYYY-MM-DD'),
         p_end_date => TO_DATE('2024-01-09', 'YYYY-MM-DD'),
-        p_tariff_id => 1,
-        p_booking_id => v_booking_id
+        p_tariff_id => 1
     );
-        DBMS_OUTPUT.PUT_LINE(v_booking_id);
 END;
 /
 
 ----------------------------------------------------------------
 --BookingNow
 ----------------------------------------------------------------
-DECLARE
-    v_booking_id NUMBER;
 BEGIN
     ADMIN.UserPack.BOOKINGNOW(
-        p_room_id => 1,
-        p_guest_id => 87,
-        p_end_date => TO_DATE('2023-12-24', 'YYYY-MM-DD'),
-        p_tariff_id => 5,
-        p_booking_id => v_booking_id
+        p_room_id => 5,
+        p_end_date => TO_DATE('2023-12-20', 'YYYY-MM-DD'),
+        p_tariff_id => 5
     );
 
 END;
@@ -124,3 +125,16 @@ END;
 ----------------------------------------------------------------
 -- DenyService
 ----------------------------------------------------------------
+
+
+
+
+----------------------------------------------------------------
+-- INFO
+----------------------------------------------------------------
+BEGIN
+    GUEST.GetTariffInfo;
+end;
+BEGIN
+    GUEST.GetTariffInfo(1);
+end;

@@ -214,7 +214,10 @@ BEGIN
     EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
                       ' IDENTIFIED BY ' || p_username ||
                       ' DEFAULT TABLESPACE HOTEL_TS' ||
-                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS' ||
+                      ' PROFILE PF_USER' ||
+                      ' ACCOUNT UNLOCK'||
+                      ' PASSWORD EXPIRE';
 
     EXECUTE IMMEDIATE 'GRANT Employee_role TO ' || p_username;
 
@@ -346,7 +349,10 @@ BEGIN
     EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
                       ' IDENTIFIED BY ' || p_username ||
                       ' DEFAULT TABLESPACE HOTEL_TS' ||
-                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS';
+                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS'||
+                      ' PROFILE PF_USER' ||
+                      ' ACCOUNT UNLOCK'||
+                      ' PASSWORD EXPIRE';
 --
      EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
 

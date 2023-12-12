@@ -16,9 +16,9 @@ END;
 
 BEGIN
     ADMIN.HotelAdminPack.InsertGuest(
-        p_email => 'guest6@example.com',
-        p_name => 'Валерия',
-        p_surname => 'Новик',
+        p_email => 'guest758q@example.com',
+        p_name => '>>Юлия',
+        p_surname => 'Никитюк',
         p_username => 'user9');
 END;
 /
@@ -69,13 +69,13 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.InsertEmployee(
-        p_name => 'Карина',
-        p_surname => 'Макова',
+        p_name => 'Кира',
+        p_surname => 'Филипова',
         p_position => 'повар',
-        p_email => 'example_manager@email.com',
-        p_hire_date => TO_DATE('2023-01-01', 'YYYY-MM-DD'),
-        p_birth_date => TO_DATE('2003-09-28', 'YYYY-MM-DD'),
-        p_username => 'employee15'
+        p_email => 'example_mcooker@email.com',
+        p_hire_date => TO_DATE('2023-02-18', 'YYYY-MM-DD'),
+        p_birth_date => TO_DATE('2001-04-08', 'YYYY-MM-DD'),
+        p_username => 'employee15Co'
     );
 
 END;
@@ -200,7 +200,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.DeleteServiceType(
-        p_service_type_id => 4
+        p_service_type_id => 5
         );
 END;
 /
@@ -296,7 +296,7 @@ end;
 ----------------------------------------------------------------
 BEGIN
     Admin.HotelAdminPack.InsertRoomType(
-        p_room_type_name        => 'Double Room',
+        p_room_type_name        => 'Double Room2',
         p_room_type_capacity    => 2,
         p_room_type_daily_price => 150.0,
         p_room_type_description => 'Комфортная комната на 2 с красивым видом'
@@ -334,7 +334,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     Admin.HotelAdminPack.DeleteRoomType(
-        p_room_type_id => 21
+        p_room_type_id => 42
     );
 END;
 /
@@ -344,7 +344,7 @@ END;
 ----------------------------------------------------------------
 begin
     ADMIN.HotelAdminPack.InsertRoom(
-    p_room_room_type_id=>4,
+    p_room_room_type_id=>42,
     p_room_number=>404);
 end;
 

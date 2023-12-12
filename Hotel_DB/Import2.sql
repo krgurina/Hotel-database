@@ -23,7 +23,6 @@ CREATE TABLE BOOKING_STATE_XML (
 ) tablespace HOTEL_TS;
 --C:\Users\XE\ora21\admin\orcl\dpdump
 
-CREATE OR REPLACE DIRECTORY XML_DIR AS 'C:\Users\XE\ora21\admin\orcl\dpdump';
 --CREATE OR REPLACE DIRECTORY XML_DIR AS 'E:\CourseProj\Hotel_DB\XML_DIR';
 
 CREATE OR REPLACE PROCEDURE EXPORT_BOOKING_STATE_XML AS
@@ -96,3 +95,39 @@ END IMPORT_BOOKING_STATE_XML;
 begin
     IMPORT_BOOKING_STATE_XML;
 end;
+
+
+
+CREATE OR REPLACE PROCEDURE EXPORT_GUESTS_XML AS
+  v_file UTL_FILE.FILE_TYPE;
+  v_xml_data CLOB;
+BEGIN
+  -- Создаем файл для записи
+  v_file := UTL_FILE.FOPEN('XML_DIR', 'guests_export.xml', 'W');
+
+  -- Генерируем XML данные с использованием DBMS_XMLGEN
+  SELECT XMLELEMENT("GUESTS",
+                  XMLAGG(XMLELEMENT("GUEST",
+                           XMLFOREST(guest_id AS "GUEST_ID",
+                                     guest_email AS "GUEST_EMAIL",
+                                     guest_name AS "GUEST_NAME",
+                                     guest_surname AS "GUEST_SURNAME",
+                                     username AS "USERNAME")
+                           )
+                  )
+         ).getClobVal()
+  INTO v_xml_data
+  FROM GUESTS;
+
+  -- Записываем XML данные в файл
+  UTL_FILE.PUT_LINE(v_file, v_xml_data);
+
+  -- Закрываем файл
+  UTL_FILE.FCLOSE(v_file);
+
+  DBMS_OUTPUT.PUT_LINE('Export successful: guests_export.xml');
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Error during export: ' || SQLERRM);
+END EXPORT_GUESTS_XML;
+/
