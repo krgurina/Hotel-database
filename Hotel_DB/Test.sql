@@ -272,4 +272,161 @@ END INSERT_BOOKING_STATE;
 /
 
 
+----------------------------------------------------------------
+-- ИМПОРТ ЭКСПОРТ
+----------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE Export_GUESTS_XML AS
+    DOC DBMS_XMLDOM.DOMDocument;
+    XDATA XMLTYPE;
+    CURSOR XMLCUR IS
+        SELECT XMLELEMENT("GUESTS",
+            XMLAttributes('http://www.w3.org/2001/XMLSchema' AS "xmlns:xsi",
+                           'http://www.oracle.com/Users.xsd' AS "xsi:nonamespaceSchemaLocation"),
+            XMLAGG(XMLELEMENT("GUEST",
+                    xmlelement("ID", GUESTS.GUEST_ID),
+                    xmlelement("NAME", GUESTS.GUEST_NAME),
+                    xmlelement("SURNAME", GUESTS.GUEST_SURNAME),
+                    xmlelement("EMAIL", GUESTS.GUEST_EMAIL),
+                    xmlelement("USERNAME", GUESTS.USERNAME)
+            ))
+        ) FROM GUESTS;
+BEGIN
+    OPEN XMLCUR;
+    FETCH XMLCUR INTO XDATA;
+    CLOSE XMLCUR;
 
+    DOC := DBMS_XMLDOM.NewDOMDocument(XDATA);
+    DBMS_XMLDOM.WRITETOFILE(DOC, 'XML_DIR/GUESTS.xml');
+END Export_GUESTS_XML;
+/
+
+
+begin
+    Export_GUESTS_XML();
+end;
+
+
+
+CREATE OR REPLACE PROCEDURE Import_GUESTS_Xml AS
+    L_CLOB CLOB;
+    L_BFILE BFILE := BFILENAME('XML_DIR', 'GUESTS.xml');
+
+    L_DEST_OFFSET INTEGER := 1;
+    L_SRC_OFFSET INTEGER := 1;
+    L_BFILE_CSID NUMBER := 0;
+    L_LANG_CONTEXT INTEGER := 0;
+    L_WARNING INTEGER := 0;
+
+--     p_email NVARCHAR2;
+--     p_name NVARCHAR2;
+--     p_surname NVARCHAR2;
+--     p_username NVARCHAR2;
+
+    P DBMS_XMLPARSER.PARSER;
+    v_doc dbms_xmldom.domdocument;
+    v_root_element dbms_xmldom.domelement;
+    V_CHILD_NODES DBMS_XMLDOM.DOMNODELIST;
+    V_CURRENT_NODE DBMS_XMLDOM.DOMNODE;
+
+    GUEST GUESTS%rowtype;
+begin
+    DBMS_LOB.CREATETEMPORARY (L_CLOB, TRUE);
+    DBMS_LOB.FILEOPEN(L_BFILE, DBMS_LOB.FILE_READONLY);
+
+    DBMS_LOB.LOADCLOBFROMFILE (DEST_LOB => L_CLOB, SRC_BFILE => L_BFILE, AMOUNT => DBMS_LOB.LOBMAXSIZE,
+    DEST_OFFSET => L_DEST_OFFSET, SRC_OFFSET => L_SRC_OFFSET, BFILE_CSID => L_BFILE_CSID,
+    LANG_CONTEXT => L_LANG_CONTEXT, WARNING => L_WARNING);
+    DBMS_LOB.FILECLOSE(L_BFILE);
+    COMMIT;
+
+    P := Dbms_Xmlparser.Newparser;
+    DBMS_XMLPARSER.PARSECLOB(P, L_CLOB);
+    V_DOC := DBMS_XMLPARSER.GETDOCUMENT(P);
+    V_ROOT_ELEMENT := DBMS_XMLDOM.Getdocumentelement(v_Doc);
+    V_CHILD_NODES := DBMS_XMLDOM.GETCHILDRENBYTAGNAME(V_ROOT_ELEMENT,'*');
+
+    FOR i IN 0 .. DBMS_XMLDOM.GETLENGTH(V_CHILD_NODES) - 1
+    LOOP
+        V_CURRENT_NODE := DBMS_XMLDOM.ITEM(V_CHILD_NODES,i);
+
+--         DBMS_XSLPROCESSOR.VALUEOF(V_CURRENT_NODE,
+--         'ID/text()',GUEST.GUEST_NAME);
+        DBMS_XSLPROCESSOR.VALUEOF(V_Current_Node, 'GUEST_NAME/text()',GUEST.GUEST_NAME);
+        DBMS_XSLPROCESSOR.VALUEOF(V_Current_Node, 'GUEST_SURNAME/text()',GUEST.GUEST_SURNAME);
+        DBMS_XSLPROCESSOR.VALUEOF(v_current_node, 'GUEST_EMAIL/text()',GUEST.GUEST_EMAIL);
+        DBMS_XSLPROCESSOR.VALUEOF(v_current_node, 'USERNAME/text()',GUEST.USERNAME);
+
+        INSERT INTO GUEST(GUEST_NAME, GUEST_SURNAME, GUEST_EMAIL, USERNAME)
+        VALUES(GUEST.GUEST_NAME, GUEST.USERNAME, GUEST.GUEST_EMAIL, GUEST.USERNAME);
+    END LOOP;
+
+    DBMS_LOB.FREETEMPORARY(L_CLOB);
+    DBMS_XMLPARSER.FREEPARSER(P);
+    DBMS_XMLDOM.FREEDOCUMENT(V_DOC);
+    COMMIT;
+END Import_GUESTS_Xml;
+
+BEGIN
+    Import_GUESTS_Xml();
+END;
+
+----------------------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE import_from_xml IS
+    v_file BFILE;
+    v_content CLOB;
+    v_parser DBMS_XMLPARSER.parser;
+    v_doc DBMS_XMLDOM.DOMDocument;
+    v_nl DBMS_XMLDOM.DOMNodeList;
+    v_node DBMS_XMLDOM.DOMNode;
+    v_child_nodes DBMS_XMLDOM.DOMNodeList;
+    v_child_node DBMS_XMLDOM.DOMNode;
+    v_guest_email VARCHAR2(100);
+    v_guest_name VARCHAR2(100);
+    v_guest_surname VARCHAR2(100);
+    v_username VARCHAR2(100);
+    v_dest_offset INTEGER := 1;
+    v_src_offset INTEGER := 1;
+    v_lang_context INTEGER := DBMS_LOB.default_lang_ctx;
+    v_warning INTEGER;
+BEGIN
+    -- Открываем файл
+    v_file := BFILENAME('XML_DIR', 'GUESTS.xml');
+    DBMS_LOB.fileopen(v_file, DBMS_LOB.file_readonly);
+
+    -- Читаем содержимое файла
+    DBMS_LOB.createtemporary(v_content, TRUE);
+    DBMS_LOB.loadclobfromfile(v_content, v_file, DBMS_LOB.getlength(v_file), v_dest_offset, v_src_offset, DBMS_LOB.file_readonly, v_lang_context, v_warning);
+    DBMS_LOB.fileclose(v_file);
+
+    -- Парсим XML
+    v_parser := DBMS_XMLPARSER.newparser;
+    DBMS_XMLPARSER.parseclob(v_parser, v_content);
+    v_doc := DBMS_XMLPARSER.getdocument(v_parser);
+
+    -- Получаем список узлов
+    v_nl := DBMS_XMLDOM.getElementsByTagName(v_doc, 'GUEST');
+
+    FOR i IN 0..DBMS_XMLDOM.getLength(v_nl)-1 LOOP
+        v_node := DBMS_XMLDOM.item(v_nl, i);
+
+        -- Получаем дочерние узлы каждого узла и вставляем в таблицу
+        v_guest_email := DBMS_XMLDOM.getNodeValue(DBMS_XMLDOM.item(DBMS_XMLDOM.getElementsByTagName(v_node, 'EMAIL'), 0));
+        v_guest_name := DBMS_XMLDOM.getNodeValue(DBMS_XMLDOM.item(DBMS_XMLDOM.getElementsByTagName(v_node, 'NAME'), 0));
+        v_guest_surname := DBMS_XMLDOM.getNodeValue(DBMS_XMLDOM.item(DBMS_XMLDOM.getElementsByTagName(v_node, 'SURNAME'), 0));
+        v_username := DBMS_XMLDOM.getNodeValue(DBMS_XMLDOM.item(DBMS_XMLDOM.getElementsByTagName(v_node, 'USERNAME'), 0));
+
+        INSERT INTO GUESTS (guest_email, guest_name, guest_surname, username) VALUES (v_guest_email, v_guest_name, v_guest_surname, v_username);
+    END LOOP;
+
+    -- Освобождаем ресурсы
+    DBMS_XMLDOM.freeNodeList(v_nl);
+    DBMS_XMLDOM.freeDocument(v_doc);
+    DBMS_XMLPARSER.freeparser(v_parser);
+    DBMS_LOB.freetemporary(v_content);
+END import_from_xml;
+
+CALL import_from_xml();
+COMMIT ;
+SELECT * FROM GUESTS;
+SELECT * FROM GUESTS_XML;

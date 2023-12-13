@@ -126,6 +126,7 @@ PROCEDURE UpdateEmployee(
 
     PROCEDURE DeleteBooking(p_booking_id NUMBER);
     PROCEDURE DeleteGuestCompletely(p_guest_id NUMBER);
+    PROCEDURE CheckOutForExpiredBookings;
 
     FUNCTION GetGuestsCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
     FUNCTION GetEmployeesCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR;
@@ -149,6 +150,7 @@ PROCEDURE UpdateEmployee(
     PROCEDURE GetRooms(p_id NUMBER DEFAULT NULL);
     PROCEDURE GetServiceTypes(p_id NUMBER DEFAULT NULL);
     PROCEDURE GetTariffTypes(p_id NUMBER DEFAULT NULL);
+
 
 
 END HotelAdminPack;
@@ -963,6 +965,8 @@ PROCEDURE InsertRoom(
     p_room_number NVARCHAR2)
 AS
     v_room_type_count NUMBER;
+    v_room_count NUMBER;
+    v_room_id NUMBER;
 
 BEGIN
     SELECT COUNT(*) INTO v_room_type_count
@@ -972,10 +976,22 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
     END IF;
 
+    IF NOT REGEXP_LIKE(p_room_number, '^[1-9][0-9]{2}[а-б]?$') THEN
+        RAISE_APPLICATION_ERROR(-20011, 'Некорректный формат номера комнаты.');
+    END IF;
+
+    SELECT COUNT(*) INTO v_room_count
+        FROM ROOMS
+        WHERE ROOM_NUMBER = p_room_number;
+    IF v_room_count > 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Комната с таким номером уже существует.');
+    END IF;
+
+
     INSERT INTO ROOMS (room_room_type_id, room_number)
-    VALUES (p_room_room_type_id, p_room_number);
+    VALUES (p_room_room_type_id, p_room_number) returning ROOM_ID into v_room_id;
     COMMIT;
-    DBMS_OUTPUT.PUT_LINE('Комната успешно добавлена.');
+    DBMS_OUTPUT.PUT_LINE('Комната успешно добавлена. ID: '||v_room_id);
 
 EXCEPTION
     WHEN OTHERS THEN
@@ -992,6 +1008,7 @@ PROCEDURE UpdateRoom(
 AS
     v_room_type_count NUMBER;
     v_room_count NUMBER;
+    v_room_name_count NUMBER;
     v_old_room ROOMS%ROWTYPE;
 
 BEGIN
@@ -1020,7 +1037,21 @@ BEGIN
         END IF;
     END IF;
 
-    -- Обновление данных комнаты с использованием COALESCE
+    IF p_room_number IS NOT NULL THEN
+        IF NOT REGEXP_LIKE(p_room_number, '^[1-9][0-9]{2}[а-б]?$') THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Некорректный формат номера комнаты.');
+        END IF;
+
+        SELECT COUNT(*) INTO v_room_name_count
+        FROM ROOMS
+        WHERE ROOM_NUMBER = p_room_number;
+        IF v_room_name_count > 0 THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Комната с таким номером уже существует.');
+        END IF;
+
+
+    END IF;
+
     UPDATE ROOMS
     SET
         room_room_type_id = COALESCE(p_room_room_type_id, v_old_room.room_room_type_id),
@@ -1789,6 +1820,28 @@ BEGIN
     CLOSE v_cursor;
 END GetTariffTypes;
 
+PROCEDURE CheckOutForExpiredBookings AS
+  v_booking_id NUMBER;
+  v_cost FLOAT;
+BEGIN
+  FOR booking_rec IN (SELECT BOOKING_ID
+                      FROM booking_details_view
+                      WHERE TRUNC(BOOKING_END_DATE) = TRUNC(SYSDATE))
+  LOOP
+    v_booking_id := booking_rec.BOOKING_ID;
+
+    -- Рассчитайте стоимость проживания и выведите сообщение
+    v_cost := GUEST.CALCULATE_STAY_COST(v_booking_id);
+    IF v_cost IS NOT NULL THEN
+      DBMS_OUTPUT.PUT_LINE('За проживание в отеле с вас ' || TO_CHAR(v_cost, '9999.99') || 'р.');
+    ELSE
+      RAISE_APPLICATION_ERROR(-20010,'Не удалось рассчитать стоимость проживания.');
+    END IF;
+
+    DELETE FROM BOOKING WHERE BOOKING_ID = v_booking_id;
+    COMMIT;
+  END LOOP;
+END CheckOutForExpiredBookings;
 
 
 

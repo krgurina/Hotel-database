@@ -344,8 +344,8 @@ END;
 ----------------------------------------------------------------
 begin
     ADMIN.HotelAdminPack.InsertRoom(
-    p_room_room_type_id=>42,
-    p_room_number=>404);
+    p_room_room_type_id=>11,
+    p_room_number=>'404б');
 end;
 
 ----------------------------------------------------------------
@@ -353,9 +353,9 @@ end;
 ----------------------------------------------------------------
 begin
     Admin.HotelAdminPack.UpdateRoom(
-        p_room_id=>1,
+        p_room_id=>45,
         p_room_room_type_id=>1,
-        p_room_number=>111
+        p_room_number=>'404а'
         );
 end;
 

@@ -27,7 +27,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.UserPack.BOOKINGNOW(
-        p_room_id => 5,
+        p_room_id => 9,
         p_end_date => TO_DATE('2023-12-20', 'YYYY-MM-DD'),
         p_tariff_id => 5
     );
@@ -62,12 +62,12 @@ END;
 
 BEGIN
     ADMIN.UserPack.UpdateBooking(
-        p_booking_id => 1,
+        p_booking_id => 41,
         p_room_id => 10,
-        p_end_date => TO_DATE('2024-01-16', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2023-12-13', 'YYYY-MM-DD'),
         p_tariff_id => 5
     );
-    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 1);
+    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 41);
 
 END;
 /
@@ -77,14 +77,17 @@ SELECT USER FROM DUAL;
 
 ----------------------------------------------------------------
 --DenyBooking
+
 ----------------------------------------------------------------
 begin
     ADMIN.UserPack.DenyBooking(
-        p_booking_id => 2);
+        p_booking_id => 61);
 end;
 
+CAll GUEST.RestoreBooking(61);
+
 BEGIN
-    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 2);
+    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 41);
 END;
 /
 
@@ -138,3 +141,23 @@ end;
 BEGIN
     GUEST.GetTariffInfo(1);
 end;
+
+
+----------------------------------------------------------------
+-- CALCULATE_STAY_COST
+----------------------------------------------------------------
+begin
+    DBMS_OUTPUT.PUT_LINE('Стоимость проживая: '|| TO_CHAR(GUEST.CALCULATE_STAY_COST(61),'9999.99') ||'р.');
+end;
+
+BEGIN
+    GUEST.CHECKOUT(61);
+END;
+
+----------------------------------------------------------------
+-- инфа о себе
+----------------------------------------------------------------
+call GUEST.GET_MY_SERVICES();
+
+call GUEST.GET_MY_BOOKINGS();
+

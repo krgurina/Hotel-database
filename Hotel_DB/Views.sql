@@ -26,7 +26,9 @@ SELECT
     G.guest_surname,
     R.room_number,
     RT.room_type_name,
-    TT.tariff_type_name
+    RT.ROOM_TYPE_DAILY_PRICE,
+    TT.tariff_type_name,
+    TT.TARIFF_TYPE_DAILY_PRICE
 FROM BOOKING_STATE BS
 JOIN BOOKING B ON BS.BOOKING_STATE_ID = B.BOOKING_STATE
 JOIN GUESTS G ON B.booking_guest_id = G.guest_id
@@ -37,7 +39,7 @@ JOIN TARIFF_TYPES TT ON B.booking_tariff_id = TT.tariff_type_id;
 select * from booking_details_view;
 
 --свободные комнаты
-CREATE VIEW AVAILABLE_ROOMS_VIEW AS
+CREATE OR REPLACE VIEW AVAILABLE_ROOMS_VIEW AS
 SELECT
     r.room_id,
     r.room_number,
@@ -53,10 +55,26 @@ WHERE
         SELECT b.booking_room_id
         FROM BOOKING b
         WHERE (b.booking_start_date <= SYSDATE AND b.booking_end_date >= SYSDATE)
-           OR (b.booking_start_date > SYSDATE AND b.booking_start_date <= ADD_MONTHS(SYSDATE, 1))
+--           OR (b.booking_start_date > SYSDATE AND b.booking_start_date <= ADD_MONTHS(SYSDATE, 1))
     );
 
 select * from AVAILABLE_ROOMS_VIEW;
+
+-- ЗАНЯТЫЕ КОМНАТЫ
+CREATE OR REPLACE VIEW BOOKED_ROOMS_VIEW AS
+SELECT
+    B.BOOKING_START_DATE,
+    B.BOOKING_END_DATE,
+    r.room_id,
+    r.room_number,
+    rt.room_type_name,
+    rt.room_type_capacity,
+    rt.room_type_daily_price,
+    rt.room_type_description
+FROM
+    BOOKING B
+    JOIN ROOMS r ON B.BOOKING_ROOM_ID = r.ROOM_ID
+    JOIN ROOM_TYPES rt ON r.room_room_type_id = rt.room_type_id;
 
 -- занятые сейчас комнаты
 CREATE VIEW OCCUPIED_ROOMS_VIEW AS
@@ -114,7 +132,7 @@ CREATE or replace VIEW service_view
 AS SELECT
     S.SERVICE_ID, S.SERVICE_START_DATE,s.SERVICE_END_DATE,
     ST.service_type_name, ST.service_type_daily_price, --service_type_table fields
-    G.GUEST_NAME, G.GUEST_SURNAME, G.username,
+    G.GUEST_NAME, G.GUEST_SURNAME, G.username, G.GUEST_ID,
     R.ROOM_NUMBER
 FROM SERVICE_TYPES ST
 INNER JOIN SERVICES S ON ST.service_type_id = S.SERVICE_ID

@@ -300,7 +300,7 @@ BEGIN
         FROM SERVICES
         WHERE service_id = p_service_id;
     IF v_service_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Услуга с указанным ID не найдено.');
+        RAISE_APPLICATION_ERROR(-20001, 'Услуга с указанным ID не найдена.');
     END IF;
 
 --     SELECT COUNT(*)
