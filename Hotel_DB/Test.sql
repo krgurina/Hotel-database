@@ -370,9 +370,13 @@ BEGIN
     Import_GUESTS_Xml();
 END;
 
+BEGIN
+    import_from_xml();
+END;
+
 ----------------------------------------------------------------
 
-CREATE OR REPLACE PROCEDURE import_from_xml IS
+CREATE OR REPLACE PROCEDURE import_from_xml2 IS
     v_file BFILE;
     v_content CLOB;
     v_parser DBMS_XMLPARSER.parser;
@@ -424,7 +428,7 @@ BEGIN
     DBMS_XMLDOM.freeDocument(v_doc);
     DBMS_XMLPARSER.freeparser(v_parser);
     DBMS_LOB.freetemporary(v_content);
-END import_from_xml;
+END import_from_xml2;
 
 CALL import_from_xml();
 COMMIT ;

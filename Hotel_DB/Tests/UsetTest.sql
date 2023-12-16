@@ -27,7 +27,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.UserPack.BOOKINGNOW(
-        p_room_id => 9,
+        p_room_id =>10 ,
         p_end_date => TO_DATE('2023-12-20', 'YYYY-MM-DD'),
         p_tariff_id => 5
     );
@@ -39,7 +39,7 @@ END;
 --GetBookingDetailsById
 ----------------------------------------------------------------
 BEGIN
-    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 1);
+    ADMIN.UserPack.GetBookingDetailsById(p_booking_id => 81);
 END;
 /
 

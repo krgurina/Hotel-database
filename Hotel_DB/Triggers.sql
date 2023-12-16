@@ -49,6 +49,17 @@ END DELETE_SERVICE_TYPE_TRIGGER;
 
 ----------------------------------------------------------------
 
+create or replace trigger UPDATE_GUEST_XML_TRIGGER
+    after insert or delete or update
+    on GUESTS
+begin
+    EXPORT_TO_FILE('select * from Guests', 'Guests');
+    DBMS_OUTPUT.PUT_LINE('Данные о гостях успешно обновлены');
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Произошла ошибка при экспорте гостей: ' || SQLERRM);
+end;
 
+----------------------------------------------------------------
 
 select * from USER_TRIGGERS

@@ -7,10 +7,10 @@ SELECT * FROM GUESTS;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.InsertGuest(
-        p_email => 'guest2@example.com',
-        p_name => 'Елизавета',
-        p_surname => 'Скроцкая',
-        p_username => 'user3');
+        p_email => 'guest47842@example.com',
+        p_name => 'Евгения',
+        p_surname => 'Коктыш',
+        p_username => 'kuKU3u');
 END;
 /
 
