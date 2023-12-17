@@ -355,7 +355,7 @@ BEGIN
                       ' PROFILE PF_USER' ||
                       ' ACCOUNT UNLOCK'||
                       ' PASSWORD EXPIRE';
---
+
     EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
 
     DBMS_OUTPUT.PUT_LINE('Гость успешно создан. Ваш ID: '||v_guest_id||' Логин: '|| p_username || ' Пароль: '|| p_username);
@@ -855,7 +855,7 @@ END DeleteServiceType;
 
 PROCEDURE InsertPhoto(
     p_photo_room_type_id NUMBER,
-     p_photo_source VARCHAR2
+    p_photo_source VARCHAR2
 ) AS
     v_room_type_count NUMBER;
     v_photo_id NUMBER;

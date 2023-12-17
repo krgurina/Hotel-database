@@ -1,52 +1,51 @@
 CREATE OR REPLACE PACKAGE UserPack AS
-    -- 1.
     PROCEDURE GET_AVAILABLE_ROOMS(
         p_capacity NUMBER,
         p_start_date DATE,
         p_end_date DATE);
 
-    PROCEDURE BookingNow(
+    PROCEDURE BOOKING_NOW(
         p_room_id NUMBER,
         p_end_date DATE,
         p_tariff_id NUMBER);
 
-    PROCEDURE PreBooking(
+    PROCEDURE PRE_BOOKING(
         p_room_id NUMBER,
         p_start_date DATE,
         p_end_date DATE,
         p_tariff_id NUMBER);
 
-    PROCEDURE GetBookingDetailsById(
+    PROCEDURE Get_BookingDetails_By_Id(
         p_booking_id NUMBER);
 
-    PROCEDURE EditBooking(
+    PROCEDURE Edit_Booking(
         p_booking_id NUMBER,
         p_room_id NUMBER DEFAULT NULL,
         p_start_date DATE DEFAULT NULL,
         p_end_date DATE DEFAULT NULL,
         p_tariff_id NUMBER DEFAULT NULL);
 
-    PROCEDURE DenyBooking(p_booking_id NUMBER);
+    PROCEDURE Deny_Booking(p_booking_id NUMBER);
 
-    PROCEDURE RestoreBooking(p_booking_id NUMBER);
+    PROCEDURE Restore_Booking(p_booking_id NUMBER);
 
-    PROCEDURE OrderService(
+    PROCEDURE Order_Service(
     p_service_type_id NUMBER,
     p_service_start_date DATE,
     p_service_end_date DATE);
 
-PROCEDURE EditService(
+PROCEDURE Edit_Service(
     p_service_id NUMBER,
     p_service_type_id NUMBER DEFAULT NULL,
     p_service_start_date DATE DEFAULT NULL,
     p_service_end_date DATE DEFAULT NULL);
 
-PROCEDURE GetServiceInfo(p_id NUMBER DEFAULT NULL);
-PROCEDURE GetTariffInfo(p_id NUMBER DEFAULT NULL);
-PROCEDURE GetRoomInfo(p_id NUMBER DEFAULT NULL);
+PROCEDURE Get_Service_Info(p_id NUMBER DEFAULT NULL);
+PROCEDURE Get_Tariff_Info(p_id NUMBER DEFAULT NULL);
+PROCEDURE Get_Room_Info(p_id NUMBER DEFAULT NULL);
 
 FUNCTION Calculate_Stay_Cost(p_booking_id IN NUMBER) RETURN FLOAT;
-PROCEDURE CheckOut(p_booking_id NUMBER);
+PROCEDURE Check_Out(p_booking_id NUMBER);
 
 PROCEDURE GET_MY_SERVICES;
 PROCEDURE GET_MY_BOOKINGS;
@@ -117,7 +116,7 @@ END GET_AVAILABLE_ROOMS;
 
 
 
-PROCEDURE BookingNow(
+PROCEDURE BOOKING_NOW(
     p_room_id NUMBER,
     p_end_date DATE,
     p_tariff_id NUMBER)
@@ -189,10 +188,10 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END BookingNow;
+END BOOKING_NOW;
 
 ----------------------------------------------------------------
-PROCEDURE PreBooking(
+PROCEDURE PRE_BOOKING(
     p_room_id NUMBER,
     p_start_date DATE,
     p_end_date DATE,
@@ -264,10 +263,10 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END PreBooking;
+END PRE_BOOKING;
 
 ----------------------------------------------------------------
-PROCEDURE GetBookingDetailsById(
+PROCEDURE Get_BookingDetails_By_Id(
     p_booking_id NUMBER
 )
 AS
@@ -310,10 +309,10 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
-END GetBookingDetailsById;
+END Get_BookingDetails_By_Id;
 
 ----------------------------------------------------------------
-PROCEDURE EditBooking(
+PROCEDURE Edit_Booking(
     p_booking_id NUMBER,
     p_room_id NUMBER DEFAULT NULL,
     p_start_date DATE DEFAULT NULL,
@@ -397,10 +396,10 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END EditBooking;
+END Edit_Booking;
 
 ----------------------------------------------------------------
-PROCEDURE DenyBooking(
+PROCEDURE Deny_Booking(
     p_booking_id NUMBER
 )
 AS
@@ -441,9 +440,9 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END DenyBooking;
+END Deny_Booking;
 
-PROCEDURE RestoreBooking(
+PROCEDURE Restore_Booking(
     p_booking_id NUMBER
 )
 AS
@@ -484,11 +483,11 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END RestoreBooking;
+END Restore_Booking;
 
 
 ----------------------------------------------------------------
-PROCEDURE OrderService(
+PROCEDURE Order_Service(
     p_service_type_id NUMBER,
     p_service_start_date DATE,
     p_service_end_date DATE)
@@ -558,10 +557,10 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END OrderService;
+END Order_Service;
 
 
-PROCEDURE EditService(
+PROCEDURE Edit_Service(
     p_service_id NUMBER,
     p_service_type_id NUMBER DEFAULT NULL,
     --p_service_guest_id NUMBER DEFAULT NULL,
@@ -631,7 +630,7 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END EditService;
+END Edit_Service;
 
 ----------------------------------------------------------------
 PROCEDURE DenyService(p_service_id NUMBER)
@@ -683,7 +682,7 @@ EXCEPTION
 END DenyService;
 
 
-PROCEDURE GetServiceInfo(p_id NUMBER DEFAULT NULL) AS
+PROCEDURE Get_Service_Info(p_id NUMBER DEFAULT NULL) AS
     v_cursor SYS_REFCURSOR;
     v_info SERVICE_TYPE_VIEW%ROWTYPE;
 BEGIN
@@ -706,9 +705,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
-END GetServiceInfo;
+END Get_Service_Info;
 
-PROCEDURE GetTariffInfo(p_id NUMBER DEFAULT NULL) AS
+PROCEDURE Get_Tariff_Info(p_id NUMBER DEFAULT NULL) AS
     v_cursor SYS_REFCURSOR;
     v_info TARIFF_TYPES%ROWTYPE;
 BEGIN
@@ -728,9 +727,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
-END GetTariffInfo;
+END Get_Tariff_Info;
 
-PROCEDURE GetRoomInfo(p_id NUMBER DEFAULT NULL) AS
+PROCEDURE Get_Room_Info(p_id NUMBER DEFAULT NULL) AS
     v_cursor SYS_REFCURSOR;
     v_info room_info_view%ROWTYPE;
 BEGIN
@@ -752,7 +751,7 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
-END GetRoomInfo;
+END Get_Room_Info;
 
 FUNCTION Calculate_Stay_Cost(p_booking_id IN NUMBER) RETURN FLOAT AS
     v_total_cost FLOAT := 0;
@@ -793,7 +792,7 @@ EXCEPTION
 
 END Calculate_Stay_Cost;
 
-PROCEDURE CheckOut(
+PROCEDURE Check_Out(
     p_booking_id NUMBER
 )
 AS
@@ -849,7 +848,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
-END CheckOut;
+END Check_Out;
 
 PROCEDURE GET_MY_SERVICES
 AS

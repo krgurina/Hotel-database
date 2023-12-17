@@ -256,7 +256,7 @@ END;
 ----------------------------------------------------------------
 --6.1 InsertPhoto
 ----------------------------------------------------------------
-create directory MEDIA_DIR as 'E:\CourseProj\photo';
+
 
 begin
     ADMIN.HotelAdminPack.InsertPhoto(
