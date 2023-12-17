@@ -290,7 +290,7 @@ BEGIN
     WHERE booking_id = p_booking_id;
 
     IF p_booking_details.BOOKING_GUEST_ID <> v_current_user_id THEN
-        RAISE_APPLICATION_ERROR(-20008, 'Вы можете изменять только свою бронь.');
+        RAISE_APPLICATION_ERROR(-20008, 'Вы можете получить информацию только о своей брони.');
     END IF;
 
     IF p_booking_details.BOOKING_STATE_ID = 3 THEN
@@ -319,6 +319,7 @@ PROCEDURE Edit_Booking(
     p_end_date DATE DEFAULT NULL,
     p_tariff_id NUMBER DEFAULT NULL)
 AS
+    v_current_date DATE := TO_DATE(SYSDATE, 'YYYY-MM-DD');
     v_old_booking BOOKING%ROWTYPE;
     v_booking_count NUMBER;
     v_room_count NUMBER;
@@ -326,6 +327,10 @@ AS
     v_tariff_count NUMBER;
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
+    v_room_available NUMBER;
+    V_room_id NUMBER;
+    v_start_date DATE;
+    v_END_date DATE;
 BEGIN
     v_current_user := USER;
 
@@ -379,6 +384,36 @@ BEGIN
     IF v_old_booking.BOOKING_STATE=3 THEN
         RAISE_APPLICATION_ERROR(-20007, 'Изменения невозможны. Ваша бронь была отменена.');
     END IF;
+
+    v_start_date:= COALESCE(p_start_date, v_old_booking.BOOKING_START_DATE);
+    v_end_date := COALESCE(p_end_date, v_old_booking.BOOKING_END_DATE);
+    V_room_id:=COALESCE(p_room_id, v_old_booking.BOOKING_ROOM_ID);
+    SELECT COUNT(*) INTO v_room_available
+        FROM BOOKING
+        WHERE booking_room_id = V_room_id
+            AND (
+                (V_start_date BETWEEN booking_start_date AND booking_end_date)
+                OR (v_end_date BETWEEN booking_start_date AND booking_end_date)
+                OR (booking_start_date BETWEEN v_start_date AND v_end_date)
+                OR (booking_end_date BETWEEN v_start_date AND v_end_date)
+            )
+            AND BOOKING_GUEST_ID!=v_current_user_id;
+    IF v_room_available > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Номер занят в выбранные даты.');
+    END IF;
+
+    IF v_start_date >= v_end_date THEN
+        RAISE_APPLICATION_ERROR(-20003, 'Дата начала бронирования должна быть раньше даты окончания.');
+    END IF;
+
+    IF v_start_date < v_current_date OR v_end_date < v_current_date THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Выберите даты бронирования, начиная с текущей даты.');
+    END IF;
+
+    IF v_end_date > TO_DATE('2025-01-01', 'YYYY-MM-DD') THEN
+        RAISE_APPLICATION_ERROR(-20005, 'На данный момент бронирование на 2025 год и позже недоступно.');
+    END IF;
+
 
 
     UPDATE BOOKING
@@ -758,6 +793,8 @@ FUNCTION Calculate_Stay_Cost(p_booking_id IN NUMBER) RETURN FLOAT AS
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
     v_booking_state NUMBER;
+    v_booking_exists NUMBER;
+    v_booking_id NUMBER;
 
 BEGIN
 
@@ -765,6 +802,15 @@ BEGIN
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
         where lower(USERNAME) = lower(v_current_user);
 
+    SELECT COUNT(*), BOOKING_ID INTO v_booking_exists, v_booking_id FROM BOOKING
+    WHERE BOOKING_ID = p_booking_id;
+    IF v_booking_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID не найдена.');
+    END IF;
+
+    IF v_booking_id <> v_current_user_id THEN
+        RAISE_APPLICATION_ERROR(-20008, 'Вы можете изменять только свою бронь.');
+    END IF;
   SELECT
     ((bk.BOOKING_END_DATE - bk.booking_start_date) * bk.room_type_daily_price +
     (bk.BOOKING_END_DATE - bk.BOOKING_START_DATE) * bk.tariff_type_daily_price), bk.BOOKING_STATE_ID

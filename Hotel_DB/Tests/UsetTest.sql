@@ -43,8 +43,8 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.UserPack.BOOKING_NOW(
-        p_room_id =>10 ,
-        p_end_date => TO_DATE('2023-12-20', 'YYYY-MM-DD'),
+        p_room_id =>11 ,
+        p_end_date => TO_DATE('2024-01-20', 'YYYY-MM-DD'),
         p_tariff_id => 5
     );
 
@@ -65,22 +65,22 @@ END;
 
 BEGIN
     ADMIN.UserPack.Edit_Booking(
-        p_booking_id => 25,
-        p_room_id => 3,
+        p_booking_id => 102,
+        p_room_id => 11,
         p_start_date => TO_DATE('2024-01-15', 'YYYY-MM-DD'),
         p_end_date => TO_DATE('2024-01-25', 'YYYY-MM-DD'),
         p_tariff_id => 4
     );
-    ADMIN.UserPack.Get_BookingDetails_By_Id(p_booking_id => 25);
+    ADMIN.UserPack.Get_BookingDetails_By_Id(p_booking_id => 102);
 
 END;
 /
 
 BEGIN
     ADMIN.UserPack.Edit_Booking(
-        p_booking_id => 41,
-        p_room_id => 10,
-        p_end_date => TO_DATE('2023-12-13', 'YYYY-MM-DD'),
+        p_booking_id => 102,
+        p_start_date => TO_DATE('2024-01-15', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2024-12-13', 'YYYY-MM-DD'),
         p_tariff_id => 5
     );
     ADMIN.UserPack.Get_BookingDetails_By_Id(p_booking_id => 41);
@@ -163,7 +163,7 @@ end;
 -- CALCULATE_STAY_COST
 ----------------------------------------------------------------
 begin
-    DBMS_OUTPUT.PUT_LINE('Стоимость проживая: '|| TO_CHAR(GUEST.CALCULATE_STAY_COST(61),'9999.99') ||'р.');
+    DBMS_OUTPUT.PUT_LINE('Стоимость проживая: '|| TO_CHAR(GUEST.CALCULATE_STAY_COST(102),'9999.99') ||'р.');
 end;
 
 BEGIN

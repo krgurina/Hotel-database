@@ -16,7 +16,9 @@ PROCEDURE UpdateEmployee(
         p_employee_position NVARCHAR2 DEFAULT NULL,
         p_employee_email NVARCHAR2 DEFAULT NULL,
         p_employee_hire_date DATE DEFAULT NULL,
-        p_employee_birth_date DATE DEFAULT NULL);
+        p_employee_birth_date DATE DEFAULT NULL,
+        p_username NVARCHAR2 DEFAULT NULL
+);
     PROCEDURE DeleteEmployee(p_employee_id NUMBER);
 
     --2. гость
@@ -29,7 +31,9 @@ PROCEDURE UpdateEmployee(
         p_guest_id NUMBER,
         p_email NVARCHAR2 DEFAULT NULL,
         p_name NVARCHAR2 DEFAULT NULL,
-        p_surname NVARCHAR2 DEFAULT NULL);
+        p_surname NVARCHAR2 DEFAULT NULL,
+        p_username NVARCHAR2 DEFAULT NULL
+);
     PROCEDURE DeleteGuest(p_guest_id NUMBER);
 
     --3. тип комнаты
@@ -240,14 +244,19 @@ PROCEDURE UpdateEmployee(
     p_employee_position NVARCHAR2 DEFAULT NULL,
     p_employee_email NVARCHAR2 DEFAULT NULL,
     p_employee_hire_date DATE DEFAULT NULL,
-    p_employee_birth_date DATE DEFAULT NULL)
+    p_employee_birth_date DATE DEFAULT NULL,
+    p_username NVARCHAR2 DEFAULT NULL)
 AS
+
     v_current_date DATE := SYSDATE;
     v_min_age CONSTANT NUMBER := 18;
     --v_employee_count NUMBER;
     v_existing_employee EMPLOYEES%ROWTYPE;
 
 BEGIN
+    if p_username is not NULL then
+            RAISE_APPLICATION_ERROR(-20100, 'Изменение логина пользователя недоступно.');
+    end if;
     SELECT *
     INTO v_existing_employee
     FROM EMPLOYEES
@@ -372,7 +381,9 @@ PROCEDURE UpdateGuest(
     p_guest_id NUMBER,
     p_email NVARCHAR2 DEFAULT NULL,
     p_name NVARCHAR2 DEFAULT NULL,
-    p_surname NVARCHAR2 DEFAULT NULL)
+    p_surname NVARCHAR2 DEFAULT NULL,
+    p_username NVARCHAR2 DEFAULT NULL)
+
 AS
     v_existing_guest GUESTS%ROWTYPE;
 
@@ -384,6 +395,10 @@ BEGIN
     IF v_existing_guest.GUEST_ID IS NULL THEN
         RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
     END IF;
+
+    if p_username is not NULL then
+            RAISE_APPLICATION_ERROR(-20100, 'Изменение логина пользователя недоступно.');
+    end if;
 
     IF REGEXP_LIKE(p_email, '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,4}$') = FALSE THEN
         RAISE_APPLICATION_ERROR(-20003, 'Неправильный формат email.');
@@ -1323,6 +1338,10 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20004, 'Выберите даты бронирования, начиная с текущей даты.');
     END IF;
 
+    IF p_end_date > TO_DATE('2025-01-01', 'YYYY-MM-DD') THEN
+        RAISE_APPLICATION_ERROR(-20005, 'На данный момент бронирование на 2025 год и позже недоступно.');
+    END IF;
+
     INSERT INTO BOOKING (
                          booking_room_id,
                          booking_guest_id,
@@ -1357,11 +1376,17 @@ PROCEDURE UpdateBooking(
     p_tariff_id NUMBER DEFAULT NULL,
     p_booking_state NUMBER DEFAULT NULL)
 AS
+    v_current_date DATE := SYSDATE;
     v_old_booking BOOKING%ROWTYPE;
     v_booking_count NUMBER;
     v_room_count NUMBER;
     v_guest_count NUMBER;
     v_tariff_count NUMBER;
+    v_start_date DATE;
+    v_end_date DATE;
+    v_room_available NUMBER;
+    V_room_id NUMBER;
+
 BEGIN
     SELECT COUNT(*) INTO v_booking_count
         FROM BOOKING
@@ -1398,18 +1423,45 @@ BEGIN
             END IF;
     END IF;
 
-
-
     -- Получаем старые данные брони
     SELECT * INTO v_old_booking
     FROM BOOKING WHERE booking_id = p_booking_id;
 
+    v_start_date:= COALESCE(p_start_date, v_old_booking.BOOKING_START_DATE);
+    v_end_date := COALESCE(p_end_date, v_old_booking.BOOKING_END_DATE);
+    V_room_id:=COALESCE(p_room_id, v_old_booking.BOOKING_ROOM_ID);
+    SELECT COUNT(*) INTO v_room_available
+        FROM BOOKING
+        WHERE booking_room_id = V_room_id
+            AND (
+                (V_start_date BETWEEN booking_start_date AND booking_end_date)
+                OR (v_end_date BETWEEN booking_start_date AND booking_end_date)
+                OR (booking_start_date BETWEEN v_start_date AND v_end_date)
+                OR (booking_end_date BETWEEN v_start_date AND v_end_date)
+            )
+            AND BOOKING_GUEST_ID!=P_guest_id;
+    IF v_room_available > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Номер занят в выбранные даты.');
+    END IF;
+
+    IF v_start_date >= v_end_date THEN
+        RAISE_APPLICATION_ERROR(-20003, 'Дата начала бронирования должна быть раньше даты окончания.');
+    END IF;
+
+    IF v_start_date < v_current_date OR v_end_date < v_current_date THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Выберите даты бронирования, начиная с текущей даты.');
+    END IF;
+
+    IF v_end_date > TO_DATE('2025-01-01', 'YYYY-MM-DD') THEN
+        RAISE_APPLICATION_ERROR(-20005, 'На данный момент бронирование на 2025 год и позже недоступно.');
+    END IF;
+
     UPDATE BOOKING
     SET
-        booking_room_id = COALESCE(p_room_id, v_old_booking.BOOKING_ROOM_ID),
+        booking_room_id = V_room_id,
         booking_guest_id = COALESCE(p_guest_id, v_old_booking.BOOKING_GUEST_ID),
-        booking_start_date = COALESCE(p_start_date, v_old_booking.BOOKING_START_DATE),
-        booking_end_date = COALESCE(p_end_date, v_old_booking.BOOKING_END_DATE),
+        booking_start_date = v_start_date,
+        booking_end_date = v_end_date,
         booking_tariff_id = COALESCE(p_tariff_id, v_old_booking.BOOKING_TARIFF_ID),
         booking_state = COALESCE(p_booking_state, v_old_booking.BOOKING_STATE)
     WHERE booking_id = p_booking_id;
@@ -1828,7 +1880,7 @@ PROCEDURE CheckOutForExpiredBookings AS
 BEGIN
   FOR booking_rec IN (SELECT BOOKING_ID
                       FROM booking_details_view
-                      WHERE TRUNC(BOOKING_END_DATE) = TRUNC(SYSDATE))
+                      WHERE TRUNC(BOOKING_END_DATE) = TRUNC(SYSDATE) or TRUNC(BOOKING_END_DATE) < TRUNC(SYSDATE))
   LOOP
     v_booking_id := booking_rec.BOOKING_ID;
 

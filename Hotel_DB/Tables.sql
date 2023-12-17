@@ -48,7 +48,7 @@ CREATE TABLE PHOTO (
     photo_room_type_id NUMBER(10) NOT NULL,
     photo_source BLOB DEFAULT EMPTY_BLOB(),
     CONSTRAINT photo_pk PRIMARY KEY (photo_id),
-    CONSTRAINT photo_room_type_fk FOREIGN KEY (photo_room_type_id) REFERENCES ROOM_TYPES(room_type_id)
+    CONSTRAINT photo_room_type_fk FOREIGN KEY (photo_room_type_id) REFERENCES ROOM_TYPES(room_type_id) ON DELETE CASCADE
 ) tablespace HOTEL_TS;
 
 SELECT * FROM PHOTO;
@@ -89,7 +89,7 @@ CREATE TABLE ROOMS (
     room_room_type_id NUMBER(10) NOT NULL,
     room_number NVARCHAR2(50) NOT NULL,
     CONSTRAINT room_pk PRIMARY KEY (room_id),
-    CONSTRAINT room_room_type_fk FOREIGN KEY (room_room_type_id) REFERENCES ROOM_TYPES(room_type_id)
+    CONSTRAINT room_room_type_fk FOREIGN KEY (room_room_type_id) REFERENCES ROOM_TYPES(room_type_id) ON DELETE CASCADE
 ) tablespace HOTEL_TS;
 
 
@@ -126,7 +126,7 @@ CREATE TABLE SERVICE_TYPES (
     service_type_daily_price FLOAT(10) NOT NULL,
     service_type_employee_id NUMBER(10) NOT NULL,
     CONSTRAINT service_type_pk PRIMARY KEY (service_type_id),
-    CONSTRAINT service_type_employee_fk FOREIGN KEY (service_type_employee_id) REFERENCES EMPLOYEES(employee_id)
+    CONSTRAINT service_type_employee_fk FOREIGN KEY (service_type_employee_id) REFERENCES EMPLOYEES(employee_id)  ON DELETE CASCADE
 ) tablespace HOTEL_TS;
 
 SELECT * FROM SERVICE_TYPES ;
@@ -155,8 +155,8 @@ CREATE TABLE SERVICES (
     service_start_date DATE NOT NULL,
     service_end_date DATE NOT NULL,
     CONSTRAINT service_pk PRIMARY KEY (service_id),
-    CONSTRAINT service_service_type_fk FOREIGN KEY (service_type_id) REFERENCES SERVICE_TYPES(service_type_id),
-    CONSTRAINT service_guest_fk FOREIGN KEY (service_guest_id) REFERENCES GUESTS(guest_id)
+    CONSTRAINT service_service_type_fk FOREIGN KEY (service_type_id) REFERENCES SERVICE_TYPES(service_type_id) ON DELETE CASCADE,
+    CONSTRAINT service_guest_fk FOREIGN KEY (service_guest_id) REFERENCES GUESTS(guest_id) ON DELETE CASCADE
 ) tablespace HOTEL_TS;
 
 SELECT * FROM SERVICES;
@@ -170,10 +170,12 @@ CREATE TABLE BOOKING_STATE (
     CONSTRAINT booking_state_pk PRIMARY KEY (booking_state_id)
 ) tablespace HOTEL_TS;
 
+
+
 insert into BOOKING_STATE (booking_state)  values ('Забронировано гостем');
 insert into BOOKING_STATE (booking_state)  values ('Одобрено администратором');
 insert into BOOKING_STATE (booking_state)  values ('Отменено гостем');
-insert into BOOKING_STATE (booking_state)  values ('FIX');
+insert into BOOKING_STATE (booking_state)  values ('Отменено администратором');
 commit;
 
 
@@ -193,10 +195,10 @@ CREATE TABLE BOOKING (
     booking_tariff_id NUMBER(10) NOT NULL,
     booking_state NUMBER(1) DEFAULT 1,
     CONSTRAINT booking_pk PRIMARY KEY (booking_id),
-    CONSTRAINT booking_room_fk FOREIGN KEY (booking_room_id) REFERENCES ROOMS(room_id),
-    CONSTRAINT booking_guest_fk FOREIGN KEY (booking_guest_id) REFERENCES GUESTS(guest_id),
-    CONSTRAINT booking_tariff_fk FOREIGN KEY (booking_tariff_id) REFERENCES TARIFF_TYPES(tariff_type_id),
-    CONSTRAINT booking_state_fk FOREIGN KEY (booking_state) REFERENCES BOOKING_STATE(booking_state_id)
+    CONSTRAINT booking_room_fk FOREIGN KEY (booking_room_id) REFERENCES ROOMS(room_id) ON DELETE CASCADE,
+    CONSTRAINT booking_guest_fk FOREIGN KEY (booking_guest_id) REFERENCES GUESTS(guest_id) ON DELETE CASCADE,
+    CONSTRAINT booking_tariff_fk FOREIGN KEY (booking_tariff_id) REFERENCES TARIFF_TYPES(tariff_type_id)ON DELETE CASCADE,
+    CONSTRAINT booking_state_fk FOREIGN KEY (booking_state) REFERENCES BOOKING_STATE(booking_state_id) ON DELETE CASCADE
 ) tablespace HOTEL_TS;
 --booking_state:
 --1 - забронирован онлайн

@@ -398,12 +398,12 @@ END;
 --1
 BEGIN
     Admin.HotelAdminPack.UpdateBooking(
-        p_booking_id =>21,
-        p_room_id => 3,
+        p_booking_id =>61,
+        p_room_id => 7,
         p_guest_id => 86,
-        p_start_date => TO_DATE('2024-12-01', 'YYYY-MM-DD'),
-        p_end_date => TO_DATE('2024-12-10', 'YYYY-MM-DD'),
-        p_tariff_id => 1,
+        p_start_date => TO_DATE('2024-1-01', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2024-6-10', 'YYYY-MM-DD'),
+        p_tariff_id => 3,
         p_booking_state => 3
     );
 END;
