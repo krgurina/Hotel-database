@@ -14,7 +14,7 @@ LEFT JOIN PHOTO P ON R.room_room_type_id = P.photo_room_type_id;
 
 select * from room_info_view;
 --
-CREATE or replace VIEW booking_details_view AS
+CREATE or replace VIEW BOOKING_DETAILS_VIEW AS
 SELECT
     B.booking_id,
     B.booking_start_date,
@@ -22,6 +22,7 @@ SELECT
     B.booking_state AS booking_state_id,
     BS.BOOKING_STATE,
     B.booking_guest_id,
+    B.booking_room_id,
     G.guest_name,
     G.guest_surname,
     R.room_number,
@@ -36,7 +37,7 @@ JOIN ROOMS R ON B.booking_room_id = R.room_id
 JOIN ROOM_TYPES RT ON R.room_room_type_id = RT.room_type_id
 JOIN TARIFF_TYPES TT ON B.booking_tariff_id = TT.tariff_type_id;
 
-select * from booking_details_view;
+select * from BOOKING_DETAILS_VIEW;
 
 --свободные комнаты
 CREATE OR REPLACE VIEW AVAILABLE_ROOMS_VIEW AS
@@ -65,6 +66,7 @@ CREATE OR REPLACE VIEW BOOKED_ROOMS_VIEW AS
 SELECT
     B.BOOKING_START_DATE,
     B.BOOKING_END_DATE,
+    B.booking_room_id,
     r.room_id,
     r.room_number,
     rt.room_type_name,
@@ -107,9 +109,20 @@ SELECT * FROM GET_ROOM_PHOTO;
 
 -------------------------SERVICE_INFO_VIEW-------------------------
 
+-- CREATE or replace VIEW SERVICE_TYPE_VIEW AS
+-- SELECT
+--     ST.service_type_id,
+--     ST.service_type_name,
+--     ST.service_type_description,
+--     ST.service_type_daily_price,
+--     E.employee_name,
+--     E.employee_surname
+-- FROM
+--     SERVICES S
+--     JOIN SERVICE_TYPES ST ON S.service_type_id = ST.service_type_id
+--     JOIN EMPLOYEES E ON ST.service_type_employee_id = E.employee_id;
 CREATE or replace VIEW SERVICE_TYPE_VIEW AS
 SELECT
-    S.service_id,
     ST.service_type_id,
     ST.service_type_name,
     ST.service_type_description,
@@ -117,8 +130,7 @@ SELECT
     E.employee_name,
     E.employee_surname
 FROM
-    SERVICES S
-    JOIN SERVICE_TYPES ST ON S.service_type_id = ST.service_type_id
+    SERVICE_TYPES ST
     JOIN EMPLOYEES E ON ST.service_type_employee_id = E.employee_id;
 
 
@@ -128,7 +140,7 @@ DROP VIEW SERVICE_TYPE_VIEW;
 
 -------------------------SERVICE_VIEW-------------------------
 --именно заказанные сервисы
-CREATE or replace VIEW service_view
+CREATE or replace VIEW SERVICE_VIEW
 AS SELECT
     S.SERVICE_ID, S.SERVICE_START_DATE,s.SERVICE_END_DATE,
     ST.service_type_name, ST.service_type_daily_price, --service_type_table fields
@@ -140,8 +152,8 @@ LEFT OUTER JOIN GUESTS G ON S.service_guest_id = G.guest_id
 INNER JOIN BOOKING B ON G.guest_id=B.BOOKING_GUEST_ID
 INNER JOIN ROOMS R ON B.BOOKING_ROOM_ID=R.ROOM_ID;
 
-SELECT * FROM service_view;
+SELECT * FROM SERVICE_VIEW;
 
-DROP VIEW service_view;
+DROP VIEW SERVICE_VIEW;
 
 

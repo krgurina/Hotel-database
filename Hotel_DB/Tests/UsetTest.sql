@@ -1,4 +1,20 @@
 --пользователь
+
+----------------------------------------------------------------
+--PreBooking
+----------------------------------------------------------------
+BEGIN
+    GUEST.GET_AVAILABLE_ROOMS(
+        P_CAPACITY => 2,
+        p_start_date => TO_DATE('2023-12-11', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2023-12-12', 'YYYY-MM-DD')
+    );
+exception
+when others then
+    DBMS_OUTPUT.PUT_LINE('капец какой-то происходит: ' || SQLERRM);
+END;
+
+
 ----------------------------------------------------------------
 --PreBooking
 ----------------------------------------------------------------
@@ -44,11 +60,11 @@ END;
 /
 
 ----------------------------------------------------------------
---UpdateBooking
+--EditBooking
 ----------------------------------------------------------------
 
 BEGIN
-    ADMIN.UserPack.UpdateBooking(
+    ADMIN.UserPack.EditBooking(
         p_booking_id => 25,
         p_room_id => 3,
         p_start_date => TO_DATE('2024-01-15', 'YYYY-MM-DD'),
@@ -61,7 +77,7 @@ END;
 /
 
 BEGIN
-    ADMIN.UserPack.UpdateBooking(
+    ADMIN.UserPack.EditBooking(
         p_booking_id => 41,
         p_room_id => 10,
         p_end_date => TO_DATE('2023-12-13', 'YYYY-MM-DD'),
@@ -161,3 +177,6 @@ call GUEST.GET_MY_SERVICES();
 
 call GUEST.GET_MY_BOOKINGS();
 
+begin
+GUEST.GetServiceInfo (2);
+END;

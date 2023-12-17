@@ -1,5 +1,10 @@
 CREATE OR REPLACE PACKAGE UserPack AS
     -- 1.
+    PROCEDURE GET_AVAILABLE_ROOMS(
+        p_capacity NUMBER,
+        p_start_date DATE,
+        p_end_date DATE);
+
     PROCEDURE BookingNow(
         p_room_id NUMBER,
         p_end_date DATE,
@@ -14,7 +19,7 @@ CREATE OR REPLACE PACKAGE UserPack AS
     PROCEDURE GetBookingDetailsById(
         p_booking_id NUMBER);
 
-    PROCEDURE UpdateBooking(
+    PROCEDURE EditBooking(
         p_booking_id NUMBER,
         p_room_id NUMBER DEFAULT NULL,
         p_start_date DATE DEFAULT NULL,
@@ -50,6 +55,67 @@ END UserPack;
 /
 
 CREATE OR REPLACE PACKAGE BODY UserPack AS
+
+PROCEDURE GET_AVAILABLE_ROOMS(
+    p_capacity NUMBER,
+    p_start_date DATE,
+    p_end_date DATE
+)
+AS
+BEGIN
+     -- Проверка вместимости
+    IF p_capacity <= 0 OR p_capacity >= 15 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Недопустимая вместимость. Укажите значение от 1 до 14.');
+        --RETURN;
+    END IF;
+
+    -- Проверка дат
+    IF p_start_date >= p_end_date THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Дата начала бронирования должна быть раньше даты окончания.');
+        --RETURN;
+    END IF;
+
+    IF p_end_date >= TO_DATE('2025-01-01', 'YYYY-MM-DD') THEN
+        RAISE_APPLICATION_ERROR(-20003, 'На данный момент бронирование на 2025 год и позже недоступно.');
+        --RETURN;
+    END IF;
+
+    FOR room_rec IN (
+        SELECT
+            ri.room_id,
+            ri.room_number,
+            ri.room_type_name,
+            ri.room_type_capacity,
+            ri.room_type_daily_price,
+            ri.room_type_description
+        FROM
+            room_info_view ri
+        WHERE
+            ri.room_id NOT IN (
+                SELECT B.booking_room_id
+                FROM BOOKED_ROOMS_VIEW B
+                WHERE (B.BOOKING_START_DATE <= p_end_date AND B.BOOKING_END_DATE >= p_start_date)
+            )
+            AND ri.room_type_capacity = p_capacity
+    )
+    LOOP
+        DBMS_OUTPUT.PUT_LINE('ID Комнаты: ' || room_rec.room_id);
+        DBMS_OUTPUT.PUT_LINE('Номер комнаты: ' || room_rec.room_number);
+        DBMS_OUTPUT.PUT_LINE('Тип комнаты: ' || room_rec.room_type_name);
+        DBMS_OUTPUT.PUT_LINE('Вместимость: ' || room_rec.room_type_capacity);
+        DBMS_OUTPUT.PUT_LINE('Стоимость за день: ' || TO_CHAR(room_rec.room_type_daily_price, '9999.99'));
+        DBMS_OUTPUT.PUT_LINE('Описание: ' || room_rec.room_type_description);
+        DBMS_OUTPUT.PUT_LINE('-------------------------');
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+END GET_AVAILABLE_ROOMS;
+
+
+
+
 
 PROCEDURE BookingNow(
     p_room_id NUMBER,
@@ -247,7 +313,7 @@ EXCEPTION
 END GetBookingDetailsById;
 
 ----------------------------------------------------------------
-PROCEDURE UpdateBooking(
+PROCEDURE EditBooking(
     p_booking_id NUMBER,
     p_room_id NUMBER DEFAULT NULL,
     p_start_date DATE DEFAULT NULL,
@@ -331,7 +397,7 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
-END UpdateBooking;
+END EditBooking;
 
 ----------------------------------------------------------------
 PROCEDURE DenyBooking(
@@ -624,14 +690,14 @@ BEGIN
     OPEN v_cursor FOR
         SELECT *
         FROM SERVICE_TYPE_VIEW
-        WHERE (p_id IS NULL OR SERVICE_ID = p_id);
+        WHERE (p_id IS NULL OR SERVICE_TYPE_ID = p_id)
+            AND SERVICE_TYPE_ID<50;
 
     LOOP
         FETCH v_cursor INTO v_info;
         EXIT WHEN v_cursor%NOTFOUND;
 
-        DBMS_OUTPUT.PUT_LINE('ID сервиса: ' || v_info.SERVICE_ID ||
-                             ', ID типа сервиса: ' || v_info.SERVICE_TYPE_ID ||
+        DBMS_OUTPUT.PUT_LINE('ID типа сервиса: ' || v_info.SERVICE_TYPE_ID ||
                              ', Название типа сервиса: ' || v_info.SERVICE_TYPE_NAME ||
                              ', Описание типа сервиса: ' || v_info.SERVICE_TYPE_DESCRIPTION ||
                              ', Суточная цена: ' || v_info.SERVICE_TYPE_DAILY_PRICE ||
@@ -699,8 +765,6 @@ BEGIN
     v_current_user := USER;
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
         where lower(USERNAME) = lower(v_current_user);
-
-
 
   SELECT
     ((bk.BOOKING_END_DATE - bk.booking_start_date) * bk.room_type_daily_price +

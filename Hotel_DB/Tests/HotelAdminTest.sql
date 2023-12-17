@@ -8,9 +8,9 @@ SELECT * FROM GUESTS;
 BEGIN
     ADMIN.HotelAdminPack.InsertGuest(
         p_email => 'guest47842@example.com',
-        p_name => 'Евгения',
-        p_surname => 'Коктыш',
-        p_username => 'kuKU3u');
+        p_name => 'Авдеева',
+        p_surname => 'Вера',
+        p_username => 'kuKU3u2');
 END;
 /
 
@@ -29,7 +29,7 @@ END;
 --1
 BEGIN
     ADMIN.HotelAdminPack.UpdateGuest(
-        p_guest_id => 81,
+        p_guest_id => 141,
         p_email => 'newemail@example.com',
         p_name => 'NewName',
         p_surname => 'NewSurname'
@@ -69,13 +69,13 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.InsertEmployee(
-        p_name => 'Кира',
-        p_surname => 'Филипова',
+        p_name => 'Дарья',
+        p_surname => 'Петрова',
         p_position => 'повар',
-        p_email => 'example_mcooker@email.com',
+        p_email => 'example_mcoqqker@email.com',
         p_hire_date => TO_DATE('2023-02-18', 'YYYY-MM-DD'),
-        p_birth_date => TO_DATE('2001-04-08', 'YYYY-MM-DD'),
-        p_username => 'employee15Co'
+        p_birth_date => TO_DATE('2000-07-08', 'YYYY-MM-DD'),
+        p_username => 'emp15Co8'
     );
 
 END;
@@ -98,7 +98,7 @@ END;
 --2
 BEGIN
     ADMIN.HotelAdminPack.UpdateEmployee(
-        p_employee_id =>43,
+        p_employee_id =>102,
         p_employee_surname => 'Юркевич',
         p_employee_position => 'бармен',
         p_employee_birth_date => TO_DATE('1998-06-17', 'YYYY-MM-DD')
@@ -382,10 +382,10 @@ end;
 ----------------------------------------------------------------
 BEGIN
     Admin.HotelAdminPack.InsertBooking(
-        p_room_id => 3,
+        p_room_id => 10,
         p_guest_id => 86,
-        p_start_date => TO_DATE('2024-12-01', 'YYYY-MM-DD'),
-        p_end_date => TO_DATE('2024-12-10', 'YYYY-MM-DD'),
+        p_start_date => TO_DATE('2024-02-01', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2025-02-10', 'YYYY-MM-DD'),
         p_tariff_id => 1,
         p_booking_state => 3
     );

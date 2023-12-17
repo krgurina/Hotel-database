@@ -356,7 +356,7 @@ BEGIN
                       ' ACCOUNT UNLOCK'||
                       ' PASSWORD EXPIRE';
 --
-     EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
+    EXECUTE IMMEDIATE 'GRANT Guest_role TO ' || p_username;
 
     DBMS_OUTPUT.PUT_LINE('Гость успешно создан. Ваш ID: '||v_guest_id||' Логин: '|| p_username || ' Пароль: '|| p_username);
 
@@ -1340,9 +1340,11 @@ BEGIN
     COMMIT;
     DBMS_OUTPUT.PUT_LINE('Бронирование успешно добавлено.');
 EXCEPTION
+
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
+        RETURN;
 END InsertBooking;
 
 --изменить бронь

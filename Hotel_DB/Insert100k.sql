@@ -3,8 +3,14 @@ BEGIN
     FOR i IN 1..100000 LOOP
         DECLARE
             v_daily_price FLOAT := DBMS_RANDOM.VALUE(5, 200);
-            v_employee_id NUMBER := DBMS_RANDOM.VALUE(1, 5);
+            v_employee_id NUMBER;
         BEGIN
+            SELECT employee_id
+            INTO v_employee_id
+            FROM EMPLOYEES
+            WHERE ROWNUM = 1
+            ORDER BY DBMS_RANDOM.VALUE;
+
             INSERT INTO SERVICE_TYPES (
                 service_type_name,
                 service_type_description,
@@ -14,22 +20,21 @@ BEGIN
                 'service ' || i,
                 'service description ' || i,
                 v_daily_price,
-                -- Выбор случайного employee_id из существующих работников
-                (SELECT employee_id FROM EMPLOYEES WHERE ROWNUM = 1)
+                v_employee_id
             );
         END;
     END LOOP;
-
     COMMIT;
 
     DBMS_OUTPUT.PUT_LINE('Вставка успешно завершена.');
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Ошибка вставки: ' || SQLERRM);
-        -- Откат изменений в случае ошибки
         ROLLBACK;
 END INSERT_SERVICE_TYPES;
-/
+
+
+select count(*) from SERVICE_TYPES;
 
 ----------------------------------------------------------------
 -- удаляем 100 000
@@ -68,6 +73,7 @@ SELECT COUNT(*) FROM SERVICE_TYPES
 SELECT * FROM SERVICE_TYPES
          JOIN SERVICES ON SERVICES.SERVICE_TYPE_ID= SERVICE_TYPES.SERVICE_TYPE_ID
          WHERE SERVICE_TYPE_DAILY_PRICE BETWEEN 25 AND 250
+            AND SERVICE_TYPE_NAME LIKE '%1890%'
         ORDER BY SERVICE_TYPES.SERVICE_TYPE_DAILY_PRICE ASC;
 
 
@@ -77,3 +83,7 @@ SELECT * FROM SERVICE_TYPES
         ORDER BY SERVICE_TYPES.SERVICE_TYPE_DAILY_PRICE ASC;
 
 SELECT * FROM SERVICE_TYPES WHERE SERVICE_TYPE_EMPLOYEE_ID = 1;
+
+SELECT * FROM SERVICE_TYPES
+         WHERE SERVICE_TYPE_DAILY_PRICE BETWEEN 25 AND 250
+            AND SERVICE_TYPE_NAME LIKE '%1890%';

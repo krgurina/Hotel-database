@@ -2,8 +2,8 @@ select * from dba_users;
 ----------------------------------------------------------------
 CREATE ROLE Hotel_admin_role;
 
-GRANT create session to Hotel_admin_role ;
-GRANT create synonym to Hotel_admin_role ;
+GRANT create session to Hotel_admin_role;
+GRANT create synonym to Hotel_admin_role;
 GRANT execute on ADMIN.HotelAdminPack to Hotel_admin_role ;
 --GRANT execute on ADMIN.HotelAdminPack.INSERTEMPLOYEE to Hotel_admin_role ;
 
