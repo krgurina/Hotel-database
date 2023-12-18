@@ -4,7 +4,9 @@ CREATE ROLE Hotel_admin_role;
 
 GRANT create session to Hotel_admin_role;
 GRANT create synonym to Hotel_admin_role;
-GRANT execute on ADMIN.HotelAdminPack to Hotel_admin_role ;
+GRANT execute on ADMIN.HotelAdminPack to Hotel_admin_role;
+GRANT READ, WRITE ON DIRECTORY MEDIA_DIR TO Hotel_admin;
+GRANT SELECT ON GET_ROOM_PHOTO TO Hotel_admin_role;
 --GRANT execute on ADMIN.HotelAdminPack.INSERTEMPLOYEE to Hotel_admin_role ;
 
 
@@ -13,6 +15,7 @@ CREATE ROLE Employee_role;
 
 GRANT create session to Employee_role ;
 GRANT EXECUTE ON ADMIN.EmployeePack TO Employee_role;
+GRANT SELECT ON GET_ROOM_PHOTO TO Employee_role;
 
 ----------------------------------------------------------------
 CREATE ROLE Guest_role;
@@ -21,6 +24,7 @@ GRANT create session to Guest_role ;
 GRANT EXECUTE ON ADMIN.UserPack TO Guest_role;
 GRANT SELECT ON booking_details_view TO Guest_role;
 GRANT READ ON DIRECTORY MEDIA_DIR TO Guest_role;
+GRANT SELECT ON GET_ROOM_PHOTO TO Guest_role;
 
 
 CREATE PROFILE PF_USER LIMIT
@@ -35,7 +39,7 @@ CREATE PROFILE PF_USER LIMIT
 ----------------------------------------------------------------
 create USER Hotel_admin identified by 123;
 grant Hotel_admin_role to Hotel_admin;
-GRANT READ, WRITE ON DIRECTORY MEDIA_DIR TO Hotel_admin;
+
 
 
 

@@ -7,10 +7,10 @@ SELECT * FROM GUESTS;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.InsertGuest(
-        p_email => 'guest47842@example.com',
-        p_name => 'Авдеева',
-        p_surname => 'Вера',
-        p_username => 'kuKU3u2');
+        p_email => 'guestzhoz14h@example.com',
+        p_name => 'Анна',
+        p_surname => 'Шелег',
+        p_username => 'guest6');
 END;
 /
 
@@ -51,10 +51,10 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.DeleteGuest(
-        p_guest_id => 81
+        p_guest_id => 121
         );
 END;
-/
+
 
 
 ----------------------------------------------------------------
@@ -69,15 +69,14 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.HotelAdminPack.InsertEmployee(
-        p_name => 'Дарья',
-        p_surname => 'Петрова',
-        p_position => 'повар',
-        p_email => 'example_mcoqqker@email.com',
-        p_hire_date => TO_DATE('2023-02-18', 'YYYY-MM-DD'),
-        p_birth_date => TO_DATE('2000-07-08', 'YYYY-MM-DD'),
-        p_username => 'emp15Co8'
+        p_name => 'Иван',
+        p_surname => 'Иванов',
+        p_position => 'охранник',
+        p_email => 'example_empl8@email.com',
+        p_hire_date => TO_DATE('2023-03-25', 'YYYY-MM-DD'),
+        p_birth_date => TO_DATE('200-12-27', 'YYYY-MM-DD'),
+        p_username => 'employee8'
     );
-
 END;
 /
 
@@ -441,3 +440,6 @@ end;
 begin
     ADMIN.HotelAdminPack.GetEmployees(1);
 end;
+
+--------------------------------------------------------------------------------------------------------------------------------
+call HOTEL_ADMIN.CHECK_IN_GUESTS();

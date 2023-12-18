@@ -2,9 +2,11 @@ CREATE OR REPLACE PROCEDURE INSERT_SERVICE_TYPES AS
 BEGIN
     FOR i IN 1..100000 LOOP
         DECLARE
-            v_daily_price FLOAT := DBMS_RANDOM.VALUE(5, 200);
+            v_daily_price FLOAT;
             v_employee_id NUMBER;
         BEGIN
+            v_daily_price := ROUND(DBMS_RANDOM.VALUE(5, 200), 2);
+
             SELECT employee_id
             INTO v_employee_id
             FROM EMPLOYEES
@@ -34,8 +36,8 @@ EXCEPTION
 END INSERT_SERVICE_TYPES;
 
 
-select count(*) from SERVICE_TYPES;
 
+select count(*) from SERVICE_TYPES;
 ----------------------------------------------------------------
 -- удаляем 100 000
 ----------------------------------------------------------------

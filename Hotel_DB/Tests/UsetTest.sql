@@ -31,9 +31,9 @@ END;
 BEGIN
     ADMIN.UserPack.PRE_BOOKING(
         p_room_id => 2,
-        p_start_date => TO_DATE('2024-01-01', 'YYYY-MM-DD'),
-        p_end_date => TO_DATE('2024-01-09', 'YYYY-MM-DD'),
-        p_tariff_id => 1
+        p_start_date => TO_DATE('2024-01-05', 'YYYY-MM-DD'),
+        p_end_date => TO_DATE('2024-01-22', 'YYYY-MM-DD'),
+        p_tariff_id => 4
     );
 END;
 /
@@ -43,8 +43,8 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.UserPack.BOOKING_NOW(
-        p_room_id =>11 ,
-        p_end_date => TO_DATE('2024-01-20', 'YYYY-MM-DD'),
+        p_room_id =>1,
+        p_end_date => TO_DATE('2024-01-01', 'YYYY-MM-DD'),
         p_tariff_id => 5
     );
 
@@ -55,9 +55,17 @@ END;
 --Get_BookingDetails_By_Id
 ----------------------------------------------------------------
 BEGIN
-    ADMIN.UserPack.Get_BookingDetails_By_Id(p_booking_id => 81);
+    ADMIN.UserPack.Get_BookingDetails_By_Id(p_booking_id => 106);
 END;
-/
+
+
+----------------------------------------------------------------
+--CHECK_IN
+----------------------------------------------------------------
+BEGIN
+    ADMIN.UserPack.CHECK_IN(p_booking_id => 106);
+END;
+
 
 ----------------------------------------------------------------
 --Edit_Booking
@@ -112,9 +120,9 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.UserPack.Order_Service(
-        p_service_type_id => 2,
-        p_service_start_date => TO_DATE('2024-01-08', 'YYYY-MM-DD'),
-        p_service_end_date => TO_DATE('2024-01-09', 'YYYY-MM-DD')
+        p_service_type_id => 10,
+        p_service_start_date => TO_DATE('2023-12-20', 'YYYY-MM-DD'),
+        p_service_end_date => TO_DATE('2023-12-24', 'YYYY-MM-DD')
     );
 END;
 /
@@ -163,7 +171,7 @@ end;
 -- CALCULATE_STAY_COST
 ----------------------------------------------------------------
 begin
-    DBMS_OUTPUT.PUT_LINE('Стоимость проживая: '|| TO_CHAR(GUEST.CALCULATE_STAY_COST(102),'9999.99') ||'р.');
+    DBMS_OUTPUT.PUT_LINE('Стоимость проживая: '|| TO_CHAR(GUEST.CALCULATE_STAY_COST(81),'9999.99') ||'р.');
 end;
 
 BEGIN
