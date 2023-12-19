@@ -188,3 +188,5 @@ call GUEST.GET_MY_BOOKINGS();
 begin
 GUEST.Get_Service_Info (2);
 END;
+
+call GUEST.GET_STAY_COST(1);

@@ -47,6 +47,7 @@ CREATE OR REPLACE PACKAGE UserPack AS
     PROCEDURE Get_Room_Info(p_id NUMBER DEFAULT NULL);
 
     FUNCTION Calculate_Stay_Cost(p_booking_id IN NUMBER) RETURN FLOAT;
+    PROCEDURE GET_STAY_COST(p_booking_id NUMBER);
     PROCEDURE Check_Out(p_booking_id NUMBER);
 
     PROCEDURE GET_MY_SERVICES;
@@ -546,7 +547,7 @@ BEGIN
         WHERE booking_id =p_booking_id;
 
     IF v_booking.BOOKING_GUEST_ID <> v_current_user_id THEN
-        RAISE_APPLICATION_ERROR(-20019, 'Вы можете отменить только свою бронь.');
+        RAISE_APPLICATION_ERROR(-20019, 'Вы можете восстановить только свою бронь.');
     END IF;
 
     IF v_booking.BOOKING_STATE=1 or v_booking.BOOKING_STATE=2 then
@@ -941,6 +942,65 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END Check_Out;
+
+
+PROCEDURE GET_STAY_COST(
+    p_booking_id NUMBER
+)
+AS
+    p_booking_details booking_details_view%ROWTYPE;
+    v_booking_exists NUMBER;
+    v_cost FLOAT;
+    v_current_user VARCHAR2(30);
+    v_current_user_id NUMBER;
+BEGIN
+    v_current_user := USER;
+    SELECT GUEST_ID INTO v_current_user_id from GUESTS
+        where lower(USERNAME) = lower(v_current_user);
+
+    -- существование брони
+    SELECT COUNT(*) INTO v_booking_exists FROM BOOKING
+    WHERE BOOKING_ID = p_booking_id;
+    IF v_booking_exists = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Бронь с указанным ID не найдена.');
+    END IF;
+
+    SELECT * INTO p_booking_details FROM booking_details_view
+    WHERE booking_details_view.BOOKING_ID = p_booking_id;
+
+    IF p_booking_details.BOOKING_GUEST_ID <> v_current_user_id THEN
+        RAISE_APPLICATION_ERROR(-20028, 'Вы можете получить доступ только к своей брони.');
+    END IF;
+--
+--     IF p_booking_details.BOOKING_START_DATE > SYSDATE THEN
+--         RAISE_APPLICATION_ERROR(-20025, 'Вы не можете выселиться так как ваша бронь ещё не началась.');
+--     END IF;
+
+    IF p_booking_details.BOOKING_STATE_ID = 3 THEN
+        RAISE_APPLICATION_ERROR(-20020, 'Бронь с указанным ID уже отменена.');
+    END IF;
+
+    --если бронь ещё не закончина то закончим
+--     IF p_booking_details.BOOKING_END_DATE > SYSDATE THEN
+--         UPDATE BOOKING SET BOOKING_END_DATE= TO_DATE(SYSDATE, 'YYYY-MM-DD')
+--         WHERE BOOKING_ID=p_booking_id;
+--         COMMIT;
+--     end if;
+
+    v_cost:= CALCULATE_STAY_COST(p_booking_id);
+    IF v_cost IS NOT NULL THEN
+        DBMS_OUTPUT.PUT_LINE('За проживание в отеле с вас ' || TO_CHAR(v_cost, '9999.99') || 'р.');
+    ELSE
+        RAISE_APPLICATION_ERROR(-20010,'Не удалось рассчитать стоимость проживания.');
+    END IF;
+        --DBMS_OUTPUT.PUT_LINE('Спасибо, что выбираете нас.');
+
+--     DELETE BOOKING WHERE BOOKING_ID=p_booking_id;
+--     COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+END GET_STAY_COST;
 
 PROCEDURE GET_MY_SERVICES
 AS

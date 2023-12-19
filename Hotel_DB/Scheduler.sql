@@ -1,5 +1,3 @@
-ALTER DATABASE SET TIME_ZONE='Europe/Moscow';
-
 -------------------------------------------------------
 -- Выселение гостей
 -------------------------------------------------------
@@ -47,42 +45,6 @@ BEGIN
 END;
 
 
-----------------------------------------------------------------
--- УДАЛЕНИЕ
-----------------------------------------------------------------
-BEGIN
-    DBMS_SCHEDULER.drop_job('DAILY_CHECKOUT_JOB');
-    DBMS_SCHEDULER.drop_schedule('DAILY_CHECKOUT_SCHEDULE');
-    DBMS_SCHEDULER.DROP_PROGRAM('DAILY_CHECKOUT_PROGRAM');
-END;
-BEGIN
-    DBMS_SCHEDULER.drop_job('DELETE_CANCEL_BOOKING_JOB');
-END;
-
---отчет
-SELECT * FROM user_scheduler_job_run_details WHERE job_name = 'DAILY_CHECKOUT_JOB';
-SELECT * FROM user_scheduler_job_run_details WHERE job_name = 'DELETE_JOB';
-SELECT * FROM user_scheduler_job_log WHERE job_name = 'DAILY_CHECKOUT_JOB';
-
-
-select job_name, next_run_date from user_scheduler_jobs; --where job_name = 'DAILY_CHECKOUT_JOB';
-
-----
-begin
-dbms_scheduler.run_job('DAILY_CHECKOUT_JOB');
-end;
---------------------------------------------------------------
-BEGIN
-  DBMS_SCHEDULER.create_job (
-    job_name        => 'DELETE_JOB',
-    job_type        => 'PLSQL_BLOCK',
-    job_action      => 'BEGIN Check_Out_GUESTS; END;',
-    start_date      => SYSTIMESTAMP,
-    repeat_interval => 'FREQ=DAILY; BYHOUR=8; BYMINUTE=15; BYSECOND=0',
-    enabled         => TRUE
-  );
-END;
-
 
 -------------------------------------------------------
 -- удаление отмененных броней
@@ -109,4 +71,12 @@ BEGIN
   DBMS_SCHEDULER.drop_job('DELETE_CANCEL_BOOKING_JOB');
 END;
 
+-- запустить
+begin
+dbms_scheduler.run_job('DAILY_CHECKOUT_JOB');
+end;
+
+--отчет
+SELECT * FROM user_scheduler_job_run_details WHERE job_name = 'DAILY_CHECKOUT_JOB';
+select job_name, next_run_date from user_scheduler_jobs;
 

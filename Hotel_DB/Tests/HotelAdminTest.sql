@@ -303,6 +303,22 @@ BEGIN
 END;
 /
 
+--2
+BEGIN
+    Admin.HotelAdminPack.InsertRoomType(
+        p_room_type_name        => 'Double Room2',
+        p_room_type_capacity    => 2,
+        p_room_type_daily_price => 150.0,
+        p_room_type_description => 'Комфортная комната на 2 с красивым видом'
+    );
+EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.PUT_LINE('Ошибка преобразования числа в строку.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+    END;
+
 
 ----------------------------------------------------------------
 --7.2. UpdateRoomType +

@@ -7,6 +7,11 @@ GRANT create synonym to Hotel_admin_role;
 GRANT execute on ADMIN.HotelAdminPack to Hotel_admin_role;
 GRANT READ, WRITE ON DIRECTORY MEDIA_DIR TO Hotel_admin;
 GRANT SELECT ON GET_ROOM_PHOTO TO Hotel_admin_role;
+GRANT SELECT ON PHOTO TO Hotel_admin_role;
+GRANT SELECT ANY TABLE TO Hotel_admin_role;
+
+grant Hotel_admin_role to Hotel_admin;
+
 --GRANT execute on ADMIN.HotelAdminPack.INSERTEMPLOYEE to Hotel_admin_role ;
 
 

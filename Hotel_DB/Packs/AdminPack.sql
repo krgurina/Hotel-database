@@ -1,16 +1,16 @@
 CREATE OR REPLACE PACKAGE HotelAdminPack AS
     -- 1. работник
     PROCEDURE InsertEmployee(
-        p_name NVARCHAR2,
-        p_surname NVARCHAR2,
-        p_position NVARCHAR2,
-        p_email NVARCHAR2,
-        p_hire_date DATE,
-        p_birth_date DATE,
-        p_username NVARCHAR2);
+        p_name NVARCHAR2 DEFAULT NULL,
+        p_surname NVARCHAR2 DEFAULT NULL,
+        p_position NVARCHAR2 DEFAULT NULL,
+        p_email NVARCHAR2 DEFAULT NULL,
+        p_hire_date DATE DEFAULT NULL,
+        p_birth_date DATE DEFAULT NULL,
+        p_username NVARCHAR2 DEFAULT NULL);
 
 PROCEDURE UpdateEmployee(
-        p_employee_id NUMBER,
+        p_employee_id NUMBER DEFAULT NULL,
         p_employee_name NVARCHAR2 DEFAULT NULL,
         p_employee_surname NVARCHAR2 DEFAULT NULL,
         p_employee_position NVARCHAR2 DEFAULT NULL,
@@ -19,36 +19,36 @@ PROCEDURE UpdateEmployee(
         p_employee_birth_date DATE DEFAULT NULL,
         p_username NVARCHAR2 DEFAULT NULL
 );
-    PROCEDURE DeleteEmployee(p_employee_id NUMBER);
+    PROCEDURE DeleteEmployee(p_employee_id NUMBER DEFAULT NULL);
 
     --2. гость
     PROCEDURE InsertGuest(
-        p_email NVARCHAR2,
-        p_name NVARCHAR2,
-        p_surname NVARCHAR2,
-        p_username NVARCHAR2);
+        p_email NVARCHAR2 DEFAULT NULL,
+        p_name NVARCHAR2 DEFAULT NULL,
+        p_surname NVARCHAR2 DEFAULT NULL,
+        p_username NVARCHAR2 DEFAULT NULL);
     PROCEDURE UpdateGuest(
-        p_guest_id NUMBER,
+        p_guest_id NUMBER DEFAULT NULL,
         p_email NVARCHAR2 DEFAULT NULL,
         p_name NVARCHAR2 DEFAULT NULL,
         p_surname NVARCHAR2 DEFAULT NULL,
         p_username NVARCHAR2 DEFAULT NULL
 );
-    PROCEDURE DeleteGuest(p_guest_id NUMBER);
+    PROCEDURE DeleteGuest(p_guest_id NUMBER DEFAULT NULL);
 
     --3. тип комнаты
     PROCEDURE InsertRoomType(
-        p_room_type_name NVARCHAR2,
-        p_room_type_capacity NUMBER,
-        p_room_type_daily_price FLOAT,
-        p_room_type_description NVARCHAR2);
+        p_room_type_name NVARCHAR2 DEFAULT NULL,
+        p_room_type_capacity NUMBER DEFAULT NULL,
+        p_room_type_daily_price FLOAT DEFAULT NULL,
+        p_room_type_description NVARCHAR2 DEFAULT NULL);
     PROCEDURE UpdateRoomType(
-        p_room_type_id NUMBER,
+        p_room_type_id NUMBER DEFAULT NULL,
         p_new_room_type_name NVARCHAR2 DEFAULT NULL,
         p_new_room_type_capacity NUMBER DEFAULT NULL,
         p_new_room_type_daily_price FLOAT DEFAULT NULL,
         p_new_room_type_description NVARCHAR2 DEFAULT NULL);
-    PROCEDURE DeleteRoomType(p_room_type_id NUMBER);
+    PROCEDURE DeleteRoomType(p_room_type_id NUMBER DEFAULT NULL);
 
     --4. тариф
     PROCEDURE InsertTariffType(
@@ -78,12 +78,12 @@ PROCEDURE UpdateEmployee(
 
     --6. фото
     PROCEDURE InsertPhoto(
-        p_photo_room_type_id NUMBER,
-        p_photo_source VARCHAR2);
+        p_photo_room_type_id NUMBER DEFAULT NULL,
+        p_photo_source VARCHAR2 DEFAULT NULL);
     PROCEDURE UpdatePhoto(
-        p_photo_id NUMBER,
-        p_room_type_id NUMBER,
-        p_photo_source VARCHAR2
+        p_photo_id NUMBER DEFAULT NULL,
+        p_room_type_id NUMBER DEFAULT NULL,
+        p_photo_source VARCHAR2 DEFAULT NULL
     );
     PROCEDURE DeletePhoto(p_photo_id NUMBER);
 
@@ -167,24 +167,35 @@ CREATE OR REPLACE PACKAGE BODY HotelAdminPack AS
 -- ****************************************************************
 -- добавить работника
  PROCEDURE InsertEmployee(
-    p_name NVARCHAR2,
-    p_surname NVARCHAR2,
-    p_position NVARCHAR2,
-    p_email NVARCHAR2,
-    p_hire_date DATE,
-    p_birth_date DATE,
-    p_username NVARCHAR2)
+    p_name NVARCHAR2 DEFAULT NULL,
+    p_surname NVARCHAR2 DEFAULT NULL,
+    p_position NVARCHAR2 DEFAULT NULL,
+    p_email NVARCHAR2 DEFAULT NULL,
+    p_hire_date DATE DEFAULT NULL,
+    p_birth_date DATE DEFAULT NULL,
+    p_username NVARCHAR2 DEFAULT NULL)
 AS
     v_current_date DATE := SYSDATE;
     v_min_age CONSTANT NUMBER := 18;
     v_username_exists NUMBER;
     v_employee_id NUMBER;
 BEGIN
+    IF p_email IS NULL OR p_name IS NULL OR p_surname IS NULL OR p_hire_date IS NULL OR p_birth_date IS NULL OR p_username IS NULL OR p_position IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_email, p_name, p_surname, p_hire_date, p_birth_date, p_username, p_position.');
+    end if;
     SELECT COUNT(*) INTO v_username_exists FROM ALL_USERS
     WHERE USERNAME = UPPER(p_username);
 
     IF v_username_exists > 0 THEN
         RAISE_APPLICATION_ERROR(-20002,'Ошибка: Пользователь с таким именем ' || p_username || ' уже существует.');
+    END IF;
+
+    IF NOT REGEXP_LIKE(p_name, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+        RAISE_APPLICATION_ERROR(-20031, 'Ошибка: Имя должно быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
+    END IF;
+
+    IF NOT REGEXP_LIKE(p_surname, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+        RAISE_APPLICATION_ERROR(-20032, 'Ошибка: Фамилия должна быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
     END IF;
 
     IF p_hire_date > v_current_date THEN
@@ -239,7 +250,7 @@ END InsertEmployee;
 
 -- изменить рабоника
 PROCEDURE UpdateEmployee(
-    p_employee_id NUMBER,
+    p_employee_id NUMBER DEFAULT NULL,
     p_employee_name NVARCHAR2 DEFAULT NULL,
     p_employee_surname NVARCHAR2 DEFAULT NULL,
     p_employee_position NVARCHAR2 DEFAULT NULL,
@@ -251,10 +262,12 @@ AS
 
     v_current_date DATE := SYSDATE;
     v_min_age CONSTANT NUMBER := 18;
-    --v_employee_count NUMBER;
     v_existing_employee EMPLOYEES%ROWTYPE;
 
 BEGIN
+    IF p_employee_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     if p_username is not NULL then
             RAISE_APPLICATION_ERROR(-20100, 'Изменение логина пользователя недоступно.');
     end if;
@@ -271,6 +284,19 @@ BEGIN
             RAISE_APPLICATION_ERROR(-20003, 'Дата найма не может быть больше текущей даты.');
         END IF;
     END IF;
+
+    if p_employee_name is not NULL then
+        IF NOT REGEXP_LIKE(p_employee_name, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+            RAISE_APPLICATION_ERROR(-20031, 'Ошибка: Имя должно быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
+        END IF;
+    END IF;
+
+    if p_employee_surname is not NULL then
+        IF NOT REGEXP_LIKE(p_employee_surname, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+            RAISE_APPLICATION_ERROR(-20032, 'Ошибка: Фамилия должна быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
+        END IF;
+    END IF;
+
     if p_employee_birth_date is not NULL then
         IF MONTHS_BETWEEN(v_current_date,  p_employee_birth_date) < v_min_age * 12 THEN
             RAISE_APPLICATION_ERROR(-20004, 'Работнику должно быть не менее 18 лет.');
@@ -304,11 +330,14 @@ END UpdateEmployee;
 
 
 -- удалить работника
-PROCEDURE DeleteEmployee(p_employee_id NUMBER)
+PROCEDURE DeleteEmployee(p_employee_id NUMBER DEFAULT NULL)
 AS
     v_employee_count NUMBER;
     v_username NVARCHAR2(50);
 BEGIN
+    IF p_employee_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     SELECT COUNT(*) INTO v_employee_count
     FROM EMPLOYEES
     WHERE employee_id = p_employee_id;
@@ -342,15 +371,18 @@ END DeleteEmployee;
 
 --создать гостя
 PROCEDURE InsertGuest(
-    p_email NVARCHAR2,
-    p_name NVARCHAR2,
-    p_surname NVARCHAR2,
-    p_username NVARCHAR2
+    p_email NVARCHAR2 DEFAULT NULL,
+    p_name NVARCHAR2 DEFAULT NULL,
+    p_surname NVARCHAR2 DEFAULT NULL,
+    p_username NVARCHAR2 DEFAULT NULL
 )
 AS
     v_username_exists NUMBER;
     v_guest_id NUMBER;
 BEGIN
+    IF p_email IS NULL OR p_name IS NULL OR p_surname IS NULL OR p_username IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_email, p_name, p_surname, p_username.');
+    end if;
     SELECT COUNT(*) INTO v_username_exists FROM ALL_USERS
     WHERE USERNAME = UPPER(p_username);
 
@@ -362,6 +394,13 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20005, 'Неправильный формат email.');
     END IF;
 
+    IF NOT REGEXP_LIKE(p_name, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+        RAISE_APPLICATION_ERROR(-20031, 'Ошибка: Имя должно быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
+    END IF;
+
+    IF NOT REGEXP_LIKE(p_surname, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+        RAISE_APPLICATION_ERROR(-20032, 'Ошибка: Фамилия должна быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
+    END IF;
     INSERT INTO GUESTS (guest_email, guest_name, guest_surname, USERNAME)
     VALUES (p_email, p_name, p_surname,p_username) RETURNING guest_id INTO v_guest_id;
     COMMIT;
@@ -387,7 +426,7 @@ END InsertGuest;
 
 --изменить гостя
 PROCEDURE UpdateGuest(
-    p_guest_id NUMBER,
+    p_guest_id NUMBER DEFAULT NULL,
     p_email NVARCHAR2 DEFAULT NULL,
     p_name NVARCHAR2 DEFAULT NULL,
     p_surname NVARCHAR2 DEFAULT NULL,
@@ -397,6 +436,9 @@ AS
     v_existing_guest GUESTS%ROWTYPE;
 
 BEGIN
+    IF p_guest_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     SELECT * INTO v_existing_guest
     FROM GUESTS
     WHERE GUEST_ID = p_guest_id;
@@ -408,6 +450,18 @@ BEGIN
     if p_username is not NULL then
             RAISE_APPLICATION_ERROR(-20100, 'Изменение логина пользователя недоступно.');
     end if;
+
+    if p_name is not NULL then
+        IF NOT REGEXP_LIKE(p_name, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+            RAISE_APPLICATION_ERROR(-20031, 'Ошибка: Имя должно быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
+        END IF;
+    END IF;
+
+    if p_surname is not NULL then
+        IF NOT REGEXP_LIKE(p_surname, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
+            RAISE_APPLICATION_ERROR(-20032, 'Ошибка: Фамилия должна быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
+        END IF;
+    END IF;
 
     if p_email is not NULL then
         IF REGEXP_LIKE(p_email, '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,4}$') = FALSE THEN
@@ -427,6 +481,8 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('Информация о госте успешно обновлена.');
 
 EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Гость с указанным ID не найден.');
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
         ROLLBACK;
@@ -434,11 +490,15 @@ END UpdateGuest;
 
 
 --удалить гостя
-PROCEDURE DeleteGuest(p_guest_id NUMBER)
+PROCEDURE DeleteGuest(p_guest_id NUMBER DEFAULT NULL)
 AS
     v_guest_count NUMBER;
     v_username VARCHAR2(50);
 BEGIN
+    IF p_guest_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
+
     SELECT COUNT(*) INTO v_guest_count
     FROM GUESTS
     WHERE guest_id = p_guest_id;
@@ -472,14 +532,17 @@ END DeleteGuest;
 -- ************************************
 --создать тип комнаты
 PROCEDURE InsertRoomType(
-  p_room_type_name        NVARCHAR2,
-  p_room_type_capacity    NUMBER,
-  p_room_type_daily_price FLOAT,
-  p_room_type_description NVARCHAR2
+  p_room_type_name        NVARCHAR2 DEFAULT NULL,
+  p_room_type_capacity    NUMBER DEFAULT NULL,
+  p_room_type_daily_price FLOAT DEFAULT NULL,
+  p_room_type_description NVARCHAR2 DEFAULT NULL
 ) AS
     existing_count NUMBER;
     v_room_type_id NUMBER;
 BEGIN
+    IF p_room_type_name IS NULL OR p_room_type_capacity IS NULL OR p_room_type_daily_price IS NULL OR p_room_type_description IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_room_type_name, p_room_type_capacity, p_room_type_daily_price, p_room_type_description.');
+    end if;
     IF p_room_type_capacity < 0 THEN
         RAISE_APPLICATION_ERROR(-20006, 'Вместимость типа комнаты должна быть больше 0.');
     END IF;
@@ -507,7 +570,7 @@ END InsertRoomType;
 
 --изменить тип комнаты
 PROCEDURE UpdateRoomType(
-    p_room_type_id NUMBER,
+    p_room_type_id NUMBER DEFAULT NULL,
     p_new_room_type_name NVARCHAR2 DEFAULT NULL,
     p_new_room_type_capacity NUMBER DEFAULT NULL,
     p_new_room_type_daily_price FLOAT DEFAULT NULL,
@@ -516,6 +579,9 @@ PROCEDURE UpdateRoomType(
     v_existing_count NUMBER;
     v_existing_room_type ROOM_TYPES%ROWTYPE;
 BEGIN
+    IF p_room_type_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     -- Проверка наличия типа комнаты с указанным ID
     SELECT *
     INTO v_existing_room_type
@@ -565,6 +631,9 @@ PROCEDURE DeleteRoomType(p_room_type_id NUMBER)
 AS
     v_room_type_count NUMBER;
 BEGIN
+    IF p_room_type_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     SELECT COUNT(*) INTO v_room_type_count
     FROM ROOM_TYPES
     WHERE room_type_id = p_room_type_id;
@@ -811,8 +880,8 @@ END DeleteServiceType;
 -- ФОТО
 -- ****************************************************************
 PROCEDURE InsertPhoto(
-    p_photo_room_type_id NUMBER,
-    p_photo_source VARCHAR2
+    p_photo_room_type_id NUMBER DEFAULT NULL,
+    p_photo_source VARCHAR2 DEFAULT NULL
 ) AS
     v_room_type_count NUMBER;
     v_photo_id NUMBER;
@@ -820,6 +889,9 @@ PROCEDURE InsertPhoto(
         PRAGMA EXCEPTION_INIT(file_exception, -22288);
 
 BEGIN
+    IF p_photo_room_type_id IS NULL OR p_photo_source IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_photo_room_type_id, p_photo_source.');
+    end if;
     --Проверка существования типа комнаты
     SELECT COUNT(*) INTO v_room_type_count
     FROM ROOM_TYPES
@@ -837,7 +909,7 @@ BEGIN
 
 EXCEPTION
     WHEN file_exception THEN
-        DBMS_OUTPUT.PUT_LINE('Произошла ошибка файла.');
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка файла. Фото не найдено.');
         ROLLBACK;
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
@@ -847,14 +919,17 @@ END InsertPhoto;
 
 --изменить галерею фото
 PROCEDURE UpdatePhoto(
-    p_photo_id NUMBER,
-    p_room_type_id NUMBER,
-    p_photo_source VARCHAR2
+    p_photo_id NUMBER DEFAULT NULL,
+    p_room_type_id NUMBER DEFAULT NULL,
+    p_photo_source VARCHAR2 DEFAULT NULL
 ) AS
     v_room_type_count NUMBER;
     v_photo_count NUMBER;
 
 BEGIN
+    IF p_photo_id IS NULL OR p_photo_source IS NULL OR p_room_type_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_photo_id, p_photo_room_type_id, p_photo_source.');
+    end if;
     --Проверка существования фото
         SELECT COUNT(*) INTO v_photo_count
         FROM PHOTO
@@ -1479,6 +1554,9 @@ BEGIN
             SELECT * FROM GUESTS;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetGuestsCursor;
 
 FUNCTION GetEmployeesCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1493,6 +1571,9 @@ BEGIN
             SELECT * FROM EMPLOYEES;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetEmployeesCursor;
 
 FUNCTION GetBookingCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1507,6 +1588,9 @@ BEGIN
             SELECT * FROM BOOKING;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetBookingCursor;
 
 FUNCTION GetBookingStateCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1521,6 +1605,9 @@ BEGIN
             SELECT * FROM BOOKING_STATE;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetBookingStateCursor;
 
 FUNCTION GetPhotoCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1535,6 +1622,9 @@ BEGIN
             SELECT * FROM PHOTO;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetPhotoCursor;
 
 FUNCTION GetRoomTypeCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1549,6 +1639,15 @@ BEGIN
             SELECT * FROM ROOM_TYPES;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('Ошибка: Нет данных.');
+    WHEN TOO_MANY_ROWS THEN
+            DBMS_OUTPUT.PUT_LINE('Ошибка: Слишком много строк.');
+    WHEN INVALID_CURSOR THEN
+            DBMS_OUTPUT.PUT_LINE('Ошибка: Недопустимый курсор.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetRoomTypeCursor;
 
 FUNCTION GetRoomCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1563,6 +1662,9 @@ BEGIN
             SELECT * FROM ROOMS;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetRoomCursor;
 
 FUNCTION GetServiceTypeCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1574,9 +1676,12 @@ BEGIN
             SELECT * FROM SERVICE_TYPES WHERE SERVICE_TYPE_ID = p_id;
     ELSE
         OPEN result_cursor FOR
-            SELECT * FROM SERVICE_TYPES;
+            SELECT * FROM SERVICE_TYPES WHERE SERVICE_TYPE_ID < 50;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetServiceTypeCursor;
 
 FUNCTION GetServiceCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1591,6 +1696,9 @@ BEGIN
             SELECT * FROM SERVICES;
     END IF;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetServiceCursor;
 
 FUNCTION GetTariffCursor(p_id NUMBER DEFAULT NULL) RETURN SYS_REFCURSOR
@@ -1600,6 +1708,9 @@ BEGIN
     OPEN result_cursor FOR
         SELECT * FROM TARIFF_TYPES;
     RETURN result_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetTariffCursor;
 
 
@@ -1626,6 +1737,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetGuests;
 
 
@@ -1650,6 +1764,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetEmployees;
 
 
@@ -1673,6 +1790,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetBookings;
 
 PROCEDURE GetBookingStates(p_id NUMBER DEFAULT NULL) AS
@@ -1690,6 +1810,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetBookingStates;
 
 
@@ -1709,6 +1832,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetPhotos;
 
 
@@ -1749,6 +1875,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetRooms;
 
 
@@ -1770,6 +1899,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetServiceTypes;
 
 
@@ -1792,6 +1924,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetServices;
 
 
@@ -1812,6 +1947,9 @@ BEGIN
     END LOOP;
 
     CLOSE v_cursor;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GetTariffTypes;
 
 PROCEDURE CHECK_OUT_GUESTS AS

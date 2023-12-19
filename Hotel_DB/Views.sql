@@ -109,7 +109,7 @@ FROM
 -- вывод фото для типа команты
 ----------------------------------------------------------------
 CREATE OR REPLACE VIEW GET_ROOM_PHOTO AS
-       SELECT P.PHOTO_ROOM_TYPE_ID, RT.ROOM_TYPE_NAME, P.PHOTO_SOURCE
+       SELECT P.PHOTO_ID, P.PHOTO_ROOM_TYPE_ID, RT.ROOM_TYPE_NAME, P.PHOTO_SOURCE
        FROM PHOTO P
        JOIN ROOM_TYPES RT ON P.PHOTO_ROOM_TYPE_ID=RT.ROOM_TYPE_ID;
 

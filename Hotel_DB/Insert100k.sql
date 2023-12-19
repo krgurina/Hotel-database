@@ -1,3 +1,16 @@
+----------------------------------------------------------------
+-- выполнение
+----------------------------------------------------------------
+
+Call INSERT_SERVICE_TYPES();
+
+CALL DELETE_ALL_SERVICE_TYPES();
+
+SELECT COUNT(*) FROM SERVICE_TYPES;
+
+----------------------------------------------------------------
+-- Процедура вставки
+----------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE INSERT_SERVICE_TYPES AS
 BEGIN
     FOR i IN 1..100000 LOOP
@@ -36,7 +49,6 @@ EXCEPTION
 END INSERT_SERVICE_TYPES;
 
 
-
 select count(*) from SERVICE_TYPES;
 ----------------------------------------------------------------
 -- удаляем 100 000
@@ -53,19 +65,6 @@ EXCEPTION
         ROLLBACK;
 END DELETE_ALL_SERVICE_TYPES;
 /
-
-----------------------------------------------------------------
--- выполнение
-----------------------------------------------------------------
-
-Call INSERT_SERVICE_TYPES();
-
-
-
-CALL DELETE_ALL_SERVICE_TYPES();
-
-
-SELECT COUNT(*) FROM SERVICE_TYPES
 
 
 ----------------------------------------------------------------
