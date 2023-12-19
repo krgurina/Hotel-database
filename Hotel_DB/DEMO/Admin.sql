@@ -109,10 +109,10 @@ SELECT * FROM GET_ROOM_PHOTO WHERE PHOTO_ROOM_TYPE_ID = 15;
 ----------------------------------------------------------------
 BEGIN
     HOTEL_ADMIN.InsertGuest(
-        p_email => 'guest_acc12738@example.com',
+        p_email => 'guest_acc12838@example.com',
         p_name => 'Кристина',
         p_surname => 'Гурина',
-        p_username => 'guest8');
+        p_username => 'guest9');
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
@@ -139,13 +139,13 @@ END;
 ----------------------------------------------------------------
 BEGIN
     HOTEL_ADMIN.InsertEmployee(
-        p_name => 'Александр',
-        p_surname => 'Витин',
+        p_name => 'Александра',
+        p_surname => 'Смирнова',
         p_position => 'менеждер',
-        p_email => 'example_empl886@email.com',
-        p_hire_date => TO_DATE('2022-04-15', 'YYYY-MM-DD'),
-        p_birth_date => TO_DATE('1982-02-03', 'YYYY-MM-DD'),
-        p_username => 'employee10'
+        p_email => 'example_empl56@email.com',
+        p_hire_date => TO_DATE('2023-04-15', 'YYYY-MM-DD'),
+        p_birth_date => TO_DATE('1972-02-03', 'YYYY-MM-DD'),
+        p_username => 'employee12'
     );
     EXCEPTION
     WHEN VALUE_ERROR THEN
@@ -159,6 +159,21 @@ END;
 ----------------------------------------------------------------
 BEGIN
     HOTEL_ADMIN.DeleteEmployee(
+        p_employee_id =>11
+    );
+EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.PUT_LINE('Ошибка преобразования числа в строку.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+END;
+
+
+----------------------------------------------------------------
+-- Удаление гостя
+----------------------------------------------------------------
+BEGIN
+    HOTEL_ADMIN.DeleteGuest(
         p_employee_id =>11
     );
 EXCEPTION

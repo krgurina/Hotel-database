@@ -1,4 +1,7 @@
 CREATE OR REPLACE PACKAGE HotelAdminPack AS
+    -- 0. Админ
+    PROCEDURE ADD_HOTEL_ADMIN(
+    p_username NVARCHAR2 DEFAULT NULL);
     -- 1. работник
     PROCEDURE InsertEmployee(
         p_name NVARCHAR2 DEFAULT NULL,
@@ -162,6 +165,34 @@ END HotelAdminPack;
 /
 
 CREATE OR REPLACE PACKAGE BODY HotelAdminPack AS
+--администратор
+PROCEDURE ADD_HOTEL_ADMIN(
+    p_username NVARCHAR2 DEFAULT NULL)
+AS
+BEGIN
+    IF p_username IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_username.');
+    end if;
+
+IF NOT REGEXP_LIKE(p_username, '^[A-Za-z][A-Za-z0-9_]{1,29}$') THEN
+    RAISE_APPLICATION_ERROR(-20033, 'Ошибка: Имя должно начинаться с латинской буквы, может содержать латинские буквы, цифры и символ подчеркивания, и быть не короче 2 и не длиннее 30 символов.');
+END IF;
+
+    EXECUTE IMMEDIATE 'CREATE USER ' || p_username ||
+                      ' IDENTIFIED BY ' || p_username ||
+                      ' DEFAULT TABLESPACE HOTEL_TS' ||
+                      ' TEMPORARY TABLESPACE HOTEL_TEMP_TS' ||
+                      ' PROFILE PF_USER' ||
+                      ' ACCOUNT UNLOCK'||
+                      ' PASSWORD EXPIRE';
+
+    EXECUTE IMMEDIATE 'GRANT Hotel_admin_role TO ' || p_username;
+    DBMS_OUTPUT.PUT_LINE('Администратор успешно добавлен.'||' Логин: '|| p_username || ' Пароль: '|| p_username);
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+        ROLLBACK;
+END ADD_HOTEL_ADMIN;
 -- ****************************************************************
 -- работник
 -- ****************************************************************
@@ -210,6 +241,9 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20005, 'Неправильный формат email.');
     END IF;
 
+    IF NOT REGEXP_LIKE(p_username, '^[A-Za-z][A-Za-z0-9_]{1,29}$') THEN
+        RAISE_APPLICATION_ERROR(-20033, 'Ошибка: Имя должно начинаться с латинской буквы, может содержать латинские буквы, цифры и символ подчеркивания, и быть не короче 2 и не длиннее 30 символов.');
+    END IF;
 
     INSERT INTO EMPLOYEES (
         employee_name,
@@ -401,6 +435,11 @@ BEGIN
     IF NOT REGEXP_LIKE(p_surname, '^[а-яА-Я][а-яА-Я]{2,15}$') THEN
         RAISE_APPLICATION_ERROR(-20032, 'Ошибка: Фамилия должна быть написано русскими буквами, не иметь пробелов и быть не короче 2 и не длиннее 15 символов.');
     END IF;
+
+    IF NOT REGEXP_LIKE(p_username, '^[A-Za-z][A-Za-z0-9_]{1,29}$') THEN
+        RAISE_APPLICATION_ERROR(-20033, 'Ошибка: Имя должно начинаться с латинской буквы, может содержать латинские буквы, цифры и символ подчеркивания, и быть не короче 2 и не длиннее 30 символов.');
+    END IF;
+
     INSERT INTO GUESTS (guest_email, guest_name, guest_surname, USERNAME)
     VALUES (p_email, p_name, p_surname,p_username) RETURNING guest_id INTO v_guest_id;
     COMMIT;
@@ -493,6 +532,7 @@ END UpdateGuest;
 PROCEDURE DeleteGuest(p_guest_id NUMBER DEFAULT NULL)
 AS
     v_guest_count NUMBER;
+    v_booking_count NUMBER;
     v_username VARCHAR2(50);
 BEGIN
     IF p_guest_id IS NULL THEN
@@ -505,6 +545,15 @@ BEGIN
 
     IF v_guest_count = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Гость с указанным ID не найден.');
+    END IF;
+
+    -- Проверяем наличие брони у гостя
+    SELECT COUNT(*) INTO v_booking_count
+    FROM BOOKING
+    WHERE booking_guest_id = p_guest_id;
+
+    IF v_booking_count > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Нельзя удалить гостя, у которого есть бронь.');
     END IF;
 
     SELECT username INTO v_username
@@ -630,6 +679,7 @@ END UpdateRoomType;
 PROCEDURE DeleteRoomType(p_room_type_id NUMBER)
 AS
     v_room_type_count NUMBER;
+    v_booking_count NUMBER;
 BEGIN
     IF p_room_type_id IS NULL THEN
         RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
@@ -640,6 +690,14 @@ BEGIN
 
     IF v_room_type_count = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Тип комнаты с указанным ID не найден.');
+    END IF;
+
+    SELECT COUNT(*) INTO v_booking_count
+    FROM BOOKING
+    WHERE booking_room_id IN (SELECT room_id FROM ROOMS WHERE room_room_type_id = p_room_type_id);
+
+    IF v_booking_count > 0 THEN
+        RAISE_APPLICATION_ERROR(-20032, 'Нельзя удалить тип комнаты, который используется в бронированиях.');
     END IF;
 
     DELETE FROM ROOM_TYPES WHERE room_type_id = p_room_type_id;
@@ -858,12 +916,21 @@ END UpdateServiceType;
 PROCEDURE DeleteServiceType(p_service_type_id NUMBER)
 AS
     v_service_type_count NUMBER;
+    v_service_orders_count NUMBER;
 BEGIN
     SELECT COUNT(*) INTO v_service_type_count
         FROM service_types
         WHERE service_type_id = p_service_type_id;
     IF v_service_type_count = 0 THEN
         RAISE_APPLICATION_ERROR(-20001, 'Тип сервиса с указанным ID не найден.');
+    END IF;
+
+    SELECT COUNT(*) INTO v_service_orders_count
+    FROM SERVICES
+    WHERE service_type_id = p_service_type_id;
+
+    IF v_service_orders_count > 0 THEN
+        RAISE_APPLICATION_ERROR(-20036, 'Нельзя удалить тип сервиса, так как существуют заказы данного сервиса.');
     END IF;
 
     DELETE FROM SERVICE_TYPES WHERE service_type_id = p_service_type_id;
@@ -1103,13 +1170,22 @@ END UpdateRoom;
 PROCEDURE DeleteRoom(p_room_id NUMBER)
 AS
     v_room_count NUMBER;
+    v_booking_count NUMBER;
 
 BEGIN
     SELECT COUNT(*) INTO v_room_count
         FROM ROOMS
         WHERE room_id = p_room_id;
     IF v_room_count = 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдено.');
+        RAISE_APPLICATION_ERROR(-20001, 'Комната с указанным ID не найдена.');
+    END IF;
+-- Проверка наличия комнаты в таблице бронирований
+    SELECT COUNT(*) INTO v_booking_count
+    FROM BOOKING
+    WHERE booking_room_id = p_room_id;
+
+    IF v_booking_count > 0 THEN
+        RAISE_APPLICATION_ERROR(-20032, 'Нельзя удалить комнату, которая используется в бронировании.');
     END IF;
 
     DELETE FROM ROOMS WHERE room_id = p_room_id;

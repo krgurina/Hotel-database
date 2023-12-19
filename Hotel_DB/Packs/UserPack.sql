@@ -1,46 +1,46 @@
 CREATE OR REPLACE PACKAGE UserPack AS
     PROCEDURE GET_AVAILABLE_ROOMS(
-        p_capacity NUMBER,
-        p_start_date DATE,
-        p_end_date DATE);
+        p_capacity NUMBER DEFAULT NULL,
+        p_start_date DATE DEFAULT NULL,
+        p_end_date DATE DEFAULT NULL);
 
     PROCEDURE BOOKING_NOW(
-        p_room_id NUMBER,
-        p_end_date DATE,
-        p_tariff_id NUMBER);
+        p_room_id NUMBER DEFAULT NULL,
+        p_end_date DATE DEFAULT NULL,
+        p_tariff_id NUMBER DEFAULT NULL);
 
     PROCEDURE PRE_BOOKING(
-        p_room_id NUMBER,
-        p_start_date DATE,
-        p_end_date DATE,
-        p_tariff_id NUMBER);
-
-    PROCEDURE Get_BookingDetails_By_Id(
-        p_booking_id NUMBER);
-
-    PROCEDURE Edit_Booking(
-        p_booking_id NUMBER,
         p_room_id NUMBER DEFAULT NULL,
         p_start_date DATE DEFAULT NULL,
         p_end_date DATE DEFAULT NULL,
         p_tariff_id NUMBER DEFAULT NULL);
 
-    PROCEDURE Deny_Booking(p_booking_id NUMBER);
+    PROCEDURE Get_BookingDetails_By_Id(
+        p_booking_id NUMBER DEFAULT NULL);
+
+    PROCEDURE Edit_Booking(
+        p_booking_id NUMBER DEFAULT NULL,
+        p_room_id NUMBER DEFAULT NULL,
+        p_start_date DATE DEFAULT NULL,
+        p_end_date DATE DEFAULT NULL,
+        p_tariff_id NUMBER DEFAULT NULL);
+
+    PROCEDURE Deny_Booking(p_booking_id NUMBER DEFAULT NULL);
     PROCEDURE CHECK_IN(p_booking_id NUMBER);
-    PROCEDURE Restore_Booking(p_booking_id NUMBER);
+    PROCEDURE Restore_Booking(p_booking_id NUMBER DEFAULT NULL);
 
     PROCEDURE Order_Service(
-        p_service_type_id NUMBER,
-        p_service_start_date DATE,
-        p_service_end_date DATE);
-
-    PROCEDURE Edit_Service(
-        p_service_id NUMBER,
         p_service_type_id NUMBER DEFAULT NULL,
         p_service_start_date DATE DEFAULT NULL,
         p_service_end_date DATE DEFAULT NULL);
 
-    PROCEDURE DenyService(p_service_id NUMBER);
+    PROCEDURE Edit_Service(
+        p_service_id NUMBER DEFAULT NULL,
+        p_service_type_id NUMBER DEFAULT NULL,
+        p_service_start_date DATE DEFAULT NULL,
+        p_service_end_date DATE DEFAULT NULL);
+
+    PROCEDURE DenyService(p_service_id NUMBER DEFAULT NULL);
 
     PROCEDURE Get_Service_Info(p_id NUMBER DEFAULT NULL);
     PROCEDURE Get_Tariff_Info(p_id NUMBER DEFAULT NULL);
@@ -59,27 +59,27 @@ END UserPack;
 CREATE OR REPLACE PACKAGE BODY UserPack AS
 
 PROCEDURE GET_AVAILABLE_ROOMS(
-    p_capacity NUMBER,
-    p_start_date DATE,
-    p_end_date DATE
+    p_capacity NUMBER DEFAULT NULL,
+    p_start_date DATE DEFAULT NULL,
+    p_end_date DATE DEFAULT NULL
 )
 AS
 BEGIN
+    IF p_capacity IS NULL OR p_start_date IS  NULL OR p_end_date IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_capacity, p_start_date, p_end_date.');
+    end if;
      -- Проверка вместимости
     IF p_capacity <= 0 OR p_capacity >= 15 THEN
         RAISE_APPLICATION_ERROR(-20019, 'Недопустимая вместимость. Укажите значение от 1 до 14.');
-        --RETURN;
     END IF;
 
     -- Проверка дат
     IF p_start_date >= p_end_date THEN
         RAISE_APPLICATION_ERROR(-20012, 'Дата начала бронирования должна быть раньше даты окончания.');
-        --RETURN;
     END IF;
 
     IF p_end_date >= TO_DATE('2025-01-01', 'YYYY-MM-DD') THEN
         RAISE_APPLICATION_ERROR(-20014, 'На данный момент бронирование на 2025 год и позже недоступно.');
-        --RETURN;
     END IF;
 
     FOR room_rec IN (
@@ -120,9 +120,9 @@ END GET_AVAILABLE_ROOMS;
 
 
 PROCEDURE BOOKING_NOW(
-    p_room_id NUMBER,
-    p_end_date DATE,
-    p_tariff_id NUMBER)
+    p_room_id NUMBER DEFAULT NULL,
+    p_end_date DATE DEFAULT NULL,
+    p_tariff_id NUMBER DEFAULT NULL)
 AS
     v_booking_id NUMBER;
     v_room_exists NUMBER;
@@ -133,6 +133,9 @@ AS
     v_current_user_id NUMBER;
 
 BEGIN
+    IF p_tariff_id IS NULL OR p_end_date IS NULL OR p_room_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_tariff_id, p_end_date, p_room_id.');
+    end if;
     v_current_user := USER;
 
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
@@ -195,10 +198,10 @@ END BOOKING_NOW;
 
 ----------------------------------------------------------------
 PROCEDURE PRE_BOOKING(
-    p_room_id NUMBER,
-    p_start_date DATE,
-    p_end_date DATE,
-    p_tariff_id NUMBER)
+    p_room_id NUMBER DEFAULT NULL,
+    p_start_date DATE DEFAULT NULL,
+    p_end_date DATE DEFAULT NULL,
+    p_tariff_id NUMBER DEFAULT NULL)
 AS
     v_current_date DATE := TRUNC(SYSDATE);
     v_booking_id NUMBER;
@@ -208,6 +211,9 @@ AS
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
 BEGIN
+    IF p_room_id IS NULL OR p_start_date IS NULL OR p_end_date IS NULL OR p_tariff_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_room_id, p_start_date, p_end_date, p_tariff_id.');
+    end if;
     v_current_user := USER;
 
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
@@ -253,6 +259,10 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20004, 'Даты брони не могут быть позже текущей.');
     END IF;
 
+     IF TRUNC(p_start_date) = v_current_date THEN
+        RAISE_APPLICATION_ERROR(-20035, 'Вы пропустили время регистрации, для добавления брони воспользйтесь процедурой BOOKING_NOW.');
+    END IF;
+
     INSERT INTO BOOKING (booking_room_id, booking_guest_id, booking_start_date, booking_end_date, booking_tariff_id)
     VALUES (
             p_room_id,
@@ -270,7 +280,7 @@ END PRE_BOOKING;
 
 ----------------------------------------------------------------
 PROCEDURE Get_BookingDetails_By_Id(
-    p_booking_id NUMBER
+    p_booking_id NUMBER DEFAULT NULL
 )
 AS
     p_booking_details booking_details_view%ROWTYPE;
@@ -278,7 +288,10 @@ AS
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
 BEGIN
-        v_current_user := USER;
+    IF p_booking_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
+    v_current_user := USER;
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
         where lower(USERNAME) = lower(v_current_user);
 
@@ -316,7 +329,7 @@ END Get_BookingDetails_By_Id;
 
 ----------------------------------------------------------------
 PROCEDURE Edit_Booking(
-    p_booking_id NUMBER,
+    p_booking_id NUMBER DEFAULT NULL,
     p_room_id NUMBER DEFAULT NULL,
     p_start_date DATE DEFAULT NULL,
     p_end_date DATE DEFAULT NULL,
@@ -335,6 +348,9 @@ AS
     v_start_date DATE;
     v_END_date DATE;
 BEGIN
+    IF p_booking_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     v_current_user := USER;
 
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
@@ -438,7 +454,7 @@ END Edit_Booking;
 
 ----------------------------------------------------------------
 PROCEDURE Deny_Booking(
-    p_booking_id NUMBER
+    p_booking_id NUMBER DEFAULT NULL
 )
 AS
     v_booking_exists NUMBER;
@@ -446,8 +462,10 @@ AS
     v_current_user VARCHAR2(50);
     v_current_user_id NUMBER;
 BEGIN
+    IF p_booking_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     v_current_user := USER;
-
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
         where lower(USERNAME) = lower(v_current_user);
 
@@ -462,6 +480,10 @@ BEGIN
 
     IF v_booking.BOOKING_GUEST_ID <> v_current_user_id THEN
         RAISE_APPLICATION_ERROR(-20019, 'Вы можете отменить только свою бронь.');
+    END IF;
+
+    IF v_booking.BOOKING_STATE=2 then
+         RAISE_APPLICATION_ERROR(-20020, 'Бронь с ID ' || p_booking_id || ' Активна, вы не можете её отменить.');
     END IF;
 
     IF v_booking.BOOKING_STATE=3 then
@@ -524,7 +546,7 @@ END CHECK_IN;
 ----------------------------------------------------------------
 
 PROCEDURE Restore_Booking(
-    p_booking_id NUMBER
+    p_booking_id NUMBER DEFAULT NULL
 )
 AS
     v_booking_exists NUMBER;
@@ -532,6 +554,9 @@ AS
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
 BEGIN
+    IF p_booking_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     v_current_user := USER;
 
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
@@ -555,7 +580,7 @@ BEGIN
     END IF;
 
     UPDATE BOOKING
-    SET booking_state = 2
+    SET booking_state = 1
     WHERE booking_id = p_booking_id;
     COMMIT;
 
@@ -569,9 +594,9 @@ END Restore_Booking;
 
 ----------------------------------------------------------------
 PROCEDURE Order_Service(
-    p_service_type_id NUMBER,
-    p_service_start_date DATE,
-    p_service_end_date DATE)
+    p_service_type_id NUMBER DEFAULT NULL,
+    p_service_start_date DATE DEFAULT NULL,
+    p_service_end_date DATE DEFAULT NULL)
 AS
     v_service_type_count NUMBER;
     v_guest_count NUMBER;
@@ -579,11 +604,12 @@ AS
     v_service_id NUMBER;
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
-    --
 
 BEGIN
+    IF p_service_type_id IS NULL OR p_service_start_date IS NULL OR p_service_end_date IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20029, 'Все параметры должны быть заданы, а именно p_service_type_id, p_service_start_date, p_service_end_date.');
+    end if;
     v_current_user := USER;
-
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
         where lower(USERNAME) = lower(v_current_user);
 
@@ -642,9 +668,8 @@ END Order_Service;
 ----------------------------------------------------------------
 
 PROCEDURE Edit_Service(
-    p_service_id NUMBER,
+    p_service_id NUMBER DEFAULT NULL,
     p_service_type_id NUMBER DEFAULT NULL,
-    --p_service_guest_id NUMBER DEFAULT NULL,
     p_service_start_date DATE DEFAULT NULL,
     p_service_end_date DATE DEFAULT NULL)
 AS
@@ -653,8 +678,12 @@ AS
     v_existing_service SERVICES%ROWTYPE;
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
+    v_booking_count NUMBER;
 
 BEGIN
+    IF p_service_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     v_current_user := USER;
 
     SELECT GUEST_ID INTO v_current_user_id from GUESTS
@@ -685,6 +714,18 @@ BEGIN
         END IF;
     END IF;
 
+    IF p_service_start_date IS NOT NULL AND p_service_end_date IS NOT NULL THEN
+            SELECT COUNT(*) INTO v_booking_count
+    FROM BOOKING
+    WHERE BOOKING_GUEST_ID = v_current_user_id
+        AND (p_service_start_date BETWEEN booking_start_date AND booking_end_date
+             OR p_service_end_date BETWEEN booking_start_date AND booking_end_date);
+
+        IF v_booking_count = 0 THEN
+            RAISE_APPLICATION_ERROR(-20025, 'Вы не имеете брони на указанный период.');
+        END IF;
+    end if;
+
     UPDATE SERVICES
     SET
         service_type_id = COALESCE(p_service_type_id, v_existing_service.SERVICE_TYPE_ID),
@@ -707,13 +748,16 @@ EXCEPTION
 END Edit_Service;
 
 ----------------------------------------------------------------
-PROCEDURE DenyService(p_service_id NUMBER)
+PROCEDURE DenyService(p_service_id NUMBER DEFAULT NULL)
 AS
     v_service_count NUMBER;
     v_existing_service SERVICES%ROWTYPE;
     v_current_user VARCHAR2(30);
     v_current_user_id NUMBER;
 BEGIN
+    IF p_service_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     v_current_user := USER;
 
     SELECT COUNT(*) INTO v_service_count
@@ -795,10 +839,12 @@ BEGIN
         FETCH v_cursor INTO v_info;
         EXIT WHEN v_cursor%NOTFOUND;
 
-        DBMS_OUTPUT.PUT_LINE('ID тарифа: ' || v_info.TARIFF_TYPE_ID ||
-                             ', Название тарифа: ' || v_info.TARIFF_TYPE_NAME ||
-                             ', Описание тарифа: ' || v_info.TARIFF_TYPE_DESCRIPTION ||
-                             ', Суточная цена: ' || v_info.TARIFF_TYPE_DAILY_PRICE);
+        DBMS_OUTPUT.PUT_LINE('ID тарифа: ' || v_info.TARIFF_TYPE_ID);
+        DBMS_OUTPUT.PUT_LINE('Название тарифа: ' || v_info.TARIFF_TYPE_NAME);
+        DBMS_OUTPUT.PUT_LINE('Описание тарифа: ' || v_info.TARIFF_TYPE_DESCRIPTION);
+        DBMS_OUTPUT.PUT_LINE('Суточная цена: ' || v_info.TARIFF_TYPE_DAILY_PRICE ||'р.');
+        DBMS_OUTPUT.PUT_LINE('----------------------------------------');
+
     END LOOP;
 
     CLOSE v_cursor;
@@ -837,10 +883,6 @@ FUNCTION Calculate_Stay_Cost(p_booking_id IN NUMBER) RETURN FLOAT AS
     v_booking_id NUMBER;
 
 BEGIN
-
---     v_current_user := USER;
---     SELECT GUEST_ID INTO v_current_user_id from GUESTS
---         where lower(USERNAME) = lower(v_current_user);
 select BOOKING_GUEST_ID into v_current_user from booking
     where BOOKING_ID = p_booking_id;
 
@@ -851,9 +893,7 @@ select BOOKING_GUEST_ID into v_current_user from booking
     END IF;
     SELECT BOOKING_ID INTO v_booking_id FROM BOOKING
     WHERE BOOKING_ID = p_booking_id;
-    IF v_booking_id <> v_current_user_id THEN
-        RAISE_APPLICATION_ERROR(-20019, 'Вы можете изменять только свою бронь.');
-    END IF;
+
   SELECT
     ((bk.BOOKING_END_DATE - bk.booking_start_date) * bk.room_type_daily_price +
     (bk.BOOKING_END_DATE - bk.BOOKING_START_DATE) * bk.tariff_type_daily_price), bk.BOOKING_STATE_ID
@@ -875,12 +915,10 @@ select BOOKING_GUEST_ID into v_current_user from booking
 EXCEPTION
   WHEN NO_DATA_FOUND THEN
               DBMS_OUTPUT.PUT_LINE('Данные не найдены: ');
-                      --raise;
 
     RETURN NULL;
      WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
-        --raise;
         RETURN NULL;
 
 END Calculate_Stay_Cost;
@@ -912,7 +950,7 @@ BEGIN
     IF p_booking_details.BOOKING_GUEST_ID <> v_current_user_id THEN
         RAISE_APPLICATION_ERROR(-20024, 'Вы можете завершить только свою бронь.');
     END IF;
---
+
     IF p_booking_details.BOOKING_START_DATE > SYSDATE THEN
         RAISE_APPLICATION_ERROR(-20025, 'Вы не можете выселиться так как ваша бронь ещё не началась.');
     END IF;
@@ -922,19 +960,26 @@ BEGIN
     END IF;
 
     --если бронь ещё не закончина то закончим
-    IF p_booking_details.BOOKING_END_DATE > SYSDATE THEN
+    IF p_booking_details.BOOKING_START_DATE = TRUNC(SYSDATE) THEN
+        UPDATE BOOKING SET BOOKING_END_DATE= TRUNC(SYSDATE) + 1
+        WHERE BOOKING_ID=p_booking_id;
+        COMMIT;
+
+    end if;
+
+    IF p_booking_details.BOOKING_END_DATE > TRUNC(SYSDATE) and p_booking_details.BOOKING_START_DATE < TRUNC(SYSDATE) THEN
         UPDATE BOOKING SET BOOKING_END_DATE= TO_DATE(SYSDATE, 'YYYY-MM-DD')
         WHERE BOOKING_ID=p_booking_id;
         COMMIT;
     end if;
-
-    v_cost:= CALCULATE_STAY_COST(p_booking_id);
-    IF v_cost IS NOT NULL THEN
-        DBMS_OUTPUT.PUT_LINE('За проживание в отеле с вас ' || TO_CHAR(v_cost, '9999.99') || 'р.');
-    ELSE
-        RAISE_APPLICATION_ERROR(-20010,'Не удалось рассчитать стоимость проживания.');
-    END IF;
-        DBMS_OUTPUT.PUT_LINE('Спасибо, что выбираете нас.');
+    GET_STAY_COST(p_booking_id);
+--     v_cost:= CALCULATE_STAY_COST(p_booking_id);
+--     IF v_cost IS NOT NULL THEN
+--         DBMS_OUTPUT.PUT_LINE('За проживание в отеле с вас ' || TO_CHAR(v_cost, '9999.99') || 'р.');
+--     ELSE
+--         RAISE_APPLICATION_ERROR(-20010,'Не удалось рассчитать стоимость проживания.');
+--     END IF;
+--         DBMS_OUTPUT.PUT_LINE('Спасибо, что выбираете нас.');
 
     DELETE BOOKING WHERE BOOKING_ID=p_booking_id;
     COMMIT;
@@ -971,21 +1016,10 @@ BEGIN
     IF p_booking_details.BOOKING_GUEST_ID <> v_current_user_id THEN
         RAISE_APPLICATION_ERROR(-20028, 'Вы можете получить доступ только к своей брони.');
     END IF;
---
---     IF p_booking_details.BOOKING_START_DATE > SYSDATE THEN
---         RAISE_APPLICATION_ERROR(-20025, 'Вы не можете выселиться так как ваша бронь ещё не началась.');
---     END IF;
 
     IF p_booking_details.BOOKING_STATE_ID = 3 THEN
         RAISE_APPLICATION_ERROR(-20020, 'Бронь с указанным ID уже отменена.');
     END IF;
-
-    --если бронь ещё не закончина то закончим
---     IF p_booking_details.BOOKING_END_DATE > SYSDATE THEN
---         UPDATE BOOKING SET BOOKING_END_DATE= TO_DATE(SYSDATE, 'YYYY-MM-DD')
---         WHERE BOOKING_ID=p_booking_id;
---         COMMIT;
---     end if;
 
     v_cost:= CALCULATE_STAY_COST(p_booking_id);
     IF v_cost IS NOT NULL THEN
@@ -993,10 +1027,7 @@ BEGIN
     ELSE
         RAISE_APPLICATION_ERROR(-20010,'Не удалось рассчитать стоимость проживания.');
     END IF;
-        --DBMS_OUTPUT.PUT_LINE('Спасибо, что выбираете нас.');
 
---     DELETE BOOKING WHERE BOOKING_ID=p_booking_id;
---     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
@@ -1028,7 +1059,7 @@ BEGIN
                             WHERE SERVICE_GUEST_ID = v_current_user_id)
         LOOP
             DBMS_OUTPUT.PUT_LINE('ID услуги: ' || service_rec.SERVICE_ID);
-            DBMS_OUTPUT.PUT_LINE('Даты: ' || TO_CHAR(service_rec.SERVICE_START_DATE, 'DD-Mon-YYYY') || ' - ' || TO_CHAR(service_rec.SERVICE_END_DATE, 'DD-Mon-YYYY'));
+            DBMS_OUTPUT.PUT_LINE('Даты: ' || TO_CHAR(service_rec.SERVICE_START_DATE, 'DD.MM.YYYY') || ' - ' || TO_CHAR(service_rec.SERVICE_END_DATE, 'DD.MM.YYYY'));
             DBMS_OUTPUT.PUT_LINE('Тип услуги: ' || service_rec.SERVICE_TYPE_NAME);
             DBMS_OUTPUT.PUT_LINE('Стоимость услуги в день: ' || TO_CHAR(service_rec.SERVICE_TYPE_DAILY_PRICE, '9999.99'));
             DBMS_OUTPUT.PUT_LINE('----------------------------------------');
@@ -1061,7 +1092,7 @@ BEGIN
                                  WHERE booking_details_view.BOOKING_GUEST_ID = v_current_user_id)
         LOOP
             DBMS_OUTPUT.PUT_LINE('Бронь с ID: ' || v_booking_details.BOOKING_ID);
-            DBMS_OUTPUT.PUT_LINE('Даты: с ' || TO_CHAR(v_booking_details.BOOKING_START_DATE, 'DD-Mon-YYYY') || ' по ' || TO_CHAR(v_booking_details.BOOKING_END_DATE, 'DD-Mon-YYYY'));
+            DBMS_OUTPUT.PUT_LINE('Даты: с ' || TO_CHAR(v_booking_details.BOOKING_START_DATE, 'DD.MM.YYYY') || ' по ' || TO_CHAR(v_booking_details.BOOKING_END_DATE, 'DD.MM.YYYY'));
             DBMS_OUTPUT.PUT_LINE('Статус брони: ' || v_booking_details.BOOKING_STATE);
             DBMS_OUTPUT.PUT_LINE('Номер комнаты: ' || v_booking_details.ROOM_NUMBER);
             DBMS_OUTPUT.PUT_LINE('Тип комнаты: ' || v_booking_details.ROOM_TYPE_NAME);
@@ -1077,17 +1108,6 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END GET_MY_BOOKINGS;
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -30,6 +30,7 @@ SELECT
     G.guest_name,
     G.guest_surname,
     R.room_number,
+    RT.room_type_id,
     RT.room_type_name,
     RT.ROOM_TYPE_DAILY_PRICE,
     TT.tariff_type_name,
@@ -84,26 +85,6 @@ FROM
     BOOKING B
     JOIN ROOMS r ON B.BOOKING_ROOM_ID = r.ROOM_ID
     JOIN ROOM_TYPES rt ON r.room_room_type_id = rt.room_type_id;
-
--- -- занятые сейчас комнаты
--- drop view OCCUPIED_ROOMS_VIEW;
--- CREATE VIEW OCCUPIED_ROOMS_VIEW AS
--- SELECT
---     b.booking_id,
---     r.room_id,
---     r.room_number,
---     rt.room_type_name,
---     b.booking_start_date,
---     b.booking_end_date
--- FROM
---     BOOKING b
---     JOIN ROOMS r ON b.booking_room_id = r.room_id
---     JOIN ROOM_TYPES rt ON r.room_room_type_id = rt.room_type_id
--- WHERE
---     (b.booking_start_date <= SYSDATE AND b.booking_end_date >= SYSDATE)
---     OR (b.booking_start_date > SYSDATE AND b.booking_start_date <= ADD_MONTHS(SYSDATE, 1));
---
--- select * from OCCUPIED_ROOMS_VIEW;
 
 ----------------------------------------------------------------
 -- вывод фото для типа команты

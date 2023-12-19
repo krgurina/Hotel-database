@@ -1,10 +1,10 @@
 CREATE OR REPLACE PACKAGE EmployeePack AS
 
-    PROCEDURE Get_Booking_Details_By_Id(p_booking_id NUMBER);
+    PROCEDURE Get_Booking_Details_By_Id(p_booking_id NUMBER DEFAULT NULL);
     PROCEDURE Get_Service_Info(p_id NUMBER DEFAULT NULL);
     PROCEDURE Birthday_Report;
     PROCEDURE GET_MY_SERVICES;
-    PROCEDURE FIND_GUEST(p_guest_id NUMBER);
+    PROCEDURE FIND_GUEST(p_guest_id NUMBER DEFAULT NULL);
     PROCEDURE QUIT_JOB;
 
     -- отменить сервис
@@ -17,12 +17,15 @@ END EmployeePack;
 CREATE OR REPLACE PACKAGE BODY EmployeePack AS
 
 PROCEDURE Get_Booking_Details_By_Id(
-    p_booking_id NUMBER
+    p_booking_id NUMBER DEFAULT NULL
 )
 AS
     p_booking_details booking_details_view%ROWTYPE;
     v_booking_exists NUMBER;
 BEGIN
+    IF p_booking_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     -- существование брони
     SELECT COUNT(*) INTO v_booking_exists FROM BOOKING
     WHERE BOOKING_ID = p_booking_id;
@@ -47,78 +50,6 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
 END Get_Booking_Details_By_Id;
-
-----------------------------------------------------------------
--- PROCEDURE GetServiceInfo(p_service_id IN NUMBER)
--- AS
---     v_service_info service_view%ROWTYPE;
---     v_service_exists NUMBER;
--- BEGIN
---     -- существование сервиса
---     SELECT COUNT(*) INTO v_service_exists FROM SERVICES
---     WHERE SERVICE_ID = p_service_id;
---     IF v_service_exists = 0 THEN
---         RAISE_APPLICATION_ERROR(-20005, 'Сервис с указанным ID не найден.');
---     END IF;
---
---     SELECT * INTO v_service_info FROM service_view
---     WHERE SERVICE_ID = p_service_id;
---
---     DBMS_OUTPUT.PUT_LINE('Информация о сервисе:');
---     DBMS_OUTPUT.PUT_LINE('ID сервиса: ' || v_service_info.SERVICE_ID);
---     DBMS_OUTPUT.PUT_LINE('Дата начала: ' || TO_CHAR(v_service_info.SERVICE_START_DATE, 'DD.MM.YYYY'));
---     DBMS_OUTPUT.PUT_LINE('Дата окончания: ' || TO_CHAR(v_service_info.SERVICE_END_DATE, 'DD.MM.YYYY'));
---     DBMS_OUTPUT.PUT_LINE('Тип сервиса: ' || v_service_info.SERVICE_TYPE_NAME);
---     DBMS_OUTPUT.PUT_LINE('Стоимость сервиса в день: ' || v_service_info.SERVICE_TYPE_DAILY_PRICE);
---     DBMS_OUTPUT.PUT_LINE('Имя гостя: ' || v_service_info.GUEST_NAME);
---     DBMS_OUTPUT.PUT_LINE('Фамилия гостя: ' || v_service_info.GUEST_SURNAME);
---     DBMS_OUTPUT.PUT_LINE('Номер комнаты: ' || v_service_info.ROOM_NUMBER);
---
--- EXCEPTION
---     WHEN OTHERS THEN
---         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
--- END GetServiceInfo;
-
-----------------------------------------------------------------
--- PROCEDURE GetServiceInfoForAll
--- AS
---     v_service_cursor SYS_REFCURSOR;
---     v_service_info service_view%ROWTYPE;
--- BEGIN
---     OPEN v_service_cursor FOR
---         SELECT * FROM service_view;
---
---     LOOP
---         FETCH v_service_cursor INTO
---             v_service_info.SERVICE_ID,
---             v_service_info.SERVICE_START_DATE,
---             v_service_info.SERVICE_END_DATE,
---             v_service_info.SERVICE_TYPE_NAME,
---             v_service_info.SERVICE_TYPE_DAILY_PRICE,
---             v_service_info.GUEST_NAME,
---             v_service_info.GUEST_SURNAME,
---             v_service_info.ROOM_NUMBER;
---
---         EXIT WHEN v_service_cursor%NOTFOUND;
---
---         DBMS_OUTPUT.PUT_LINE('Информация о сервисе:');
---         DBMS_OUTPUT.PUT_LINE('ID сервиса: ' || v_service_info.SERVICE_ID);
---         DBMS_OUTPUT.PUT_LINE('Тип сервиса: ' || v_service_info.SERVICE_TYPE_NAME);
---         DBMS_OUTPUT.PUT_LINE('Дата начала: ' || TO_CHAR(v_service_info.SERVICE_START_DATE, 'DD.MM.YYYY'));
---         DBMS_OUTPUT.PUT_LINE('Дата окончания: ' || TO_CHAR(v_service_info.SERVICE_END_DATE, 'DD.MM.YYYY'));
---         DBMS_OUTPUT.PUT_LINE('Стоимость сервиса в день: ' || v_service_info.SERVICE_TYPE_DAILY_PRICE);
---         DBMS_OUTPUT.PUT_LINE('Имя гостя: ' || v_service_info.GUEST_NAME);
---         DBMS_OUTPUT.PUT_LINE('Фамилия гостя: ' || v_service_info.GUEST_SURNAME);
---         DBMS_OUTPUT.PUT_LINE('Номер комнаты: ' || v_service_info.ROOM_NUMBER);
---         DBMS_OUTPUT.PUT_LINE('----------------------');
---     END LOOP;
---
---     CLOSE v_service_cursor;
---
--- EXCEPTION
---     WHEN OTHERS THEN
---         DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
--- END GetServiceInfoForAll;
 
 ----------------------------------------------------------------
 PROCEDURE Get_Service_Info(p_id NUMBER DEFAULT NULL) AS
@@ -216,9 +147,12 @@ EXCEPTION
 END GET_MY_SERVICES;
 
 
-PROCEDURE FIND_GUEST(p_guest_id NUMBER) AS
+PROCEDURE FIND_GUEST(p_guest_id NUMBER DEFAULT NULL) AS
  v_guest_name NVARCHAR2(100);
 BEGIN
+    IF p_guest_id IS NULL THEN
+        RAISE_APPLICATION_ERROR(-20030, 'Идентификатор должен быть задан обязательно.');
+    end if;
     SELECT guest_name || ' ' || guest_surname INTO v_guest_name
     FROM GUESTS
     WHERE guest_id = p_guest_id;

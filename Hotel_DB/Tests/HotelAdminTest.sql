@@ -349,7 +349,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     Admin.HotelAdminPack.DeleteRoomType(
-        p_room_type_id => 42
+        p_room_type_id => 1
     );
 END;
 /
@@ -387,7 +387,7 @@ end;
 ----------------------------------------------------------------
 begin
     Admin.HotelAdminPack.DeleteRoom(
-        p_room_id       => 1
+        p_room_id       => 2
         );
 end;
 /

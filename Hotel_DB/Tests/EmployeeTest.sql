@@ -1,8 +1,7 @@
-call EMPLOYEE.Get_Booking_Details_By_Id(1);
-
-call EMPLOYEE.GetAllServiceTypesInfo();
+call EMPLOYEE.Get_Booking_Details_By_Id(22);
 
 call EMPLOYEE.Birthday_Report();
+
 call EMPLOYEE.GET_MY_SERVICES();
 call EMPLOYEE.FIND_GUEST(1);
 

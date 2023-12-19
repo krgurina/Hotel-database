@@ -101,7 +101,6 @@ SELECT USER FROM DUAL;
 
 ----------------------------------------------------------------
 --Deny_Booking
-
 ----------------------------------------------------------------
 begin
     ADMIN.UserPack.Deny_Booking(
@@ -120,7 +119,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     ADMIN.UserPack.Order_Service(
-        p_service_type_id => 10,
+        p_service_type_id => 2,
         p_service_start_date => TO_DATE('2023-12-20', 'YYYY-MM-DD'),
         p_service_end_date => TO_DATE('2023-12-24', 'YYYY-MM-DD')
     );
