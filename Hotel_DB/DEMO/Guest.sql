@@ -48,7 +48,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     GUEST.PRE_BOOKING(
-        p_room_id => 7,
+        p_room_id => 9,
         p_start_date => TO_DATE('2024-05-01', 'YYYY-MM-DD'),
         p_end_date => TO_DATE('2024-06-15', 'YYYY-MM-DD'),
         p_tariff_id => 2
@@ -184,7 +184,7 @@ END;
 ----------------------------------------------------------------
 BEGIN
     GUEST.Check_Out(
-        p_booking_id => 25
+        p_booking_id => 26
     );
 EXCEPTION
     WHEN VALUE_ERROR THEN

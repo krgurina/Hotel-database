@@ -3,7 +3,7 @@
 ----------------------------------------------------------------
 BEGIN
     HOTEL_ADMIN.InsertRoomType(
-        p_room_type_name        => 'Double Room lux',
+        p_room_type_name        => 'Double Room lux++',
         p_room_type_capacity    => 2,
         p_room_type_daily_price => 150.0,
         p_room_type_description => 'Комфортный 2-к комнатаный номер на 2 с красивым видом'
@@ -176,6 +176,51 @@ BEGIN
     HOTEL_ADMIN.DeleteGuest(
         p_employee_id =>11
     );
+EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.PUT_LINE('Ошибка преобразования числа в строку.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+END;
+
+
+----------------------------------------------------------------
+-- Создание комнаты
+----------------------------------------------------------------
+BEGIN
+    HOTEL_ADMIN.InsertRoom(
+    p_room_room_type_id=>11,
+    p_room_number=>'404б');
+EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.PUT_LINE('Ошибка преобразования числа в строку.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+END;
+
+----------------------------------------------------------------
+-- Изменение комнаты
+----------------------------------------------------------------
+BEGIN
+    HOTEL_ADMIN.UpdateRoom(
+        p_room_id=>45,
+        p_room_room_type_id=>1,
+        p_room_number=>'404а'
+        );
+EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.PUT_LINE('Ошибка преобразования числа в строку.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Произошла ошибка: ' || SQLERRM);
+END;
+
+----------------------------------------------------------------
+-- Удаление комнаты
+----------------------------------------------------------------
+BEGIN
+    HOTEL_ADMIN.DeleteRoom(
+        p_room_id=>45
+        );
 EXCEPTION
     WHEN VALUE_ERROR THEN
         DBMS_OUTPUT.PUT_LINE('Ошибка преобразования числа в строку.');

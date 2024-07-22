@@ -973,13 +973,13 @@ BEGIN
         COMMIT;
     end if;
     GET_STAY_COST(p_booking_id);
---     v_cost:= CALCULATE_STAY_COST(p_booking_id);
---     IF v_cost IS NOT NULL THEN
---         DBMS_OUTPUT.PUT_LINE('За проживание в отеле с вас ' || TO_CHAR(v_cost, '9999.99') || 'р.');
---     ELSE
---         RAISE_APPLICATION_ERROR(-20010,'Не удалось рассчитать стоимость проживания.');
---     END IF;
---         DBMS_OUTPUT.PUT_LINE('Спасибо, что выбираете нас.');
+    v_cost:= CALCULATE_STAY_COST(p_booking_id);
+    IF v_cost IS NOT NULL THEN
+        DBMS_OUTPUT.PUT_LINE('За проживание в отеле с вас ' || TO_CHAR(v_cost, '9999.99') || 'р.');
+    ELSE
+        RAISE_APPLICATION_ERROR(-20010,'Не удалось рассчитать стоимость проживания.');
+    END IF;
+        DBMS_OUTPUT.PUT_LINE('Спасибо, что выбираете нас.');
 
     DELETE BOOKING WHERE BOOKING_ID=p_booking_id;
     COMMIT;
